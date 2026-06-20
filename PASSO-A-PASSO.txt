@@ -1,0 +1,25 @@
+PASSO A PASSO RÁPIDO
+
+1. Acesse github.com
+2. Crie um novo repositório
+3. Nome sugerido: bolao-copa-online
+4. Envie estes arquivos:
+   - index.html
+   - README.md
+   - .nojekyll
+
+5. Depois vá em:
+   Settings > Pages
+
+6. Configure:
+   Source: Deploy from a branch
+   Branch: main
+   Folder: /root
+
+7. Clique em Save.
+
+8. Aguarde aparecer o link do site.
+
+Atenção:
+O Supabase precisa estar com as tabelas criadas.
+Se abrir o app e der erro, confira se o SQL foi executado no Supabase.

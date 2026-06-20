@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bolão da Copa Online - Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --text: #101828;
+      --muted: #667085;
+      --border: #e4e7ec;
+      --green: #07824a;
+      --blue: #155eef;
+      --dark: #0f172a;
+      --danger: #d92d20;
+      --yellow: #f7c948;
+      --orange: #f79009;
+      --shadow: 0 12px 30px rgba(16, 24, 40, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .hidden { display: none !important; }
+
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      background: linear-gradient(135deg, #07824a, #155eef);
+    }
+
+    .login-hero {
+      color: white;
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .login-hero h1 {
+      font-size: 46px;
+      margin: 0 0 14px;
+      line-height: 1.05;
+    }
+
+    .login-hero p {
+      font-size: 18px;
+      max-width: 620px;
+      line-height: 1.5;
+      opacity: .92;
+    }
+
+    .price-badge {
+      display: inline-block;
+      width: fit-content;
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.28);
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .login-card-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 470px;
+      background: white;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.22);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: #f2f4f7;
+      padding: 6px;
+      border-radius: 16px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      color: #344054;
+      border-radius: 12px;
+      min-height: 42px;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: var(--green);
+      box-shadow: 0 4px 12px rgba(16, 24, 40, .08);
+    }
+
+    .login-card h2 {
+      margin: 0 0 8px;
+      font-size: 27px;
+    }
+
+    .login-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #344054;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      background: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    input, select { height: 46px; }
+    textarea { min-height: 78px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(21, 94, 239, .12);
+    }
+
+    .field { margin-bottom: 14px; }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      min-height: 44px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: .18s;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(.96);
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary { background: var(--green); color: #fff; }
+    .btn-blue { background: var(--blue); color: #fff; }
+    .btn-yellow { background: var(--yellow); color: #111827; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-muted { background: #eef2f6; color: #344054; }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-full { width: 100%; }
+
+    .hint-box {
+      background: #f8fafc;
+      border: 1px solid #e4e7ec;
+      padding: 14px;
+      border-radius: 14px;
+      margin-top: 16px;
+      color: #475467;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      min-height: 100vh;
+    }
+
+    aside {
+      background: linear-gradient(180deg, #0f172a, #111827);
+      color: white;
+      padding: 22px 16px;
+      position: fixed;
+      width: 270px;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      overflow-y: auto;
+    }
+
+    .brand {
+      padding: 8px 8px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: rgba(255,255,255,.72);
+      line-height: 1.35;
+    }
+
+    .user-pill {
+      margin-top: 14px;
+      background: rgba(255,255,255,.08);
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu-btn {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: rgba(255,255,255,.86);
+      font-size: 15px;
+      font-weight: 800;
+      padding: 13px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-btn:hover {
+      background: rgba(255,255,255,.08);
+      color: #fff;
+    }
+
+    .menu-btn.active {
+      background: #ffffff;
+      color: #111827;
+    }
+
+    .logout-btn {
+      margin-top: 18px;
+      width: 100%;
+      background: rgba(255,255,255,.12);
+      color: white;
+    }
+
+    .mobile-menu {
+      display: none;
+      width: 100%;
+      padding: 13px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: #fff;
+      color: #111827;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    main {
+      grid-column: 2;
+      padding: 28px;
+      width: 100%;
+    }
+
+    .content {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      border-radius: 22px;
+      color: white;
+      padding: 26px 30px;
+      margin-bottom: 22px;
+      box-shadow: 0 16px 34px rgba(21, 94, 239, .18);
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      font-size: 16px;
+      opacity: .94;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    h3 {
+      margin: 0 0 18px;
+      font-size: 22px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+      max-width: 360px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .message {
+      display: none;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-weight: 800;
+    }
+
+    .success {
+      background: #ecfdf3;
+      color: #027a48;
+      border: 1px solid #abefc6;
+    }
+
+    .error {
+      background: #fef3f2;
+      color: #b42318;
+      border: 1px solid #fecdca;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .stat-card {
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .stat-number {
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .stat-label {
+      margin-top: 8px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .list-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fcfcfd;
+      margin-bottom: 12px;
+    }
+
+    .list-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .list-title strong { font-size: 16px; }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .pill.open { background: #eff8ff; color: #175cd3; }
+    .pill.finished { background: #ecfdf3; color: #027a48; }
+    .pill.warning { background: #fffaeb; color: #b54708; }
+    .pill.admin { background: #eef4ff; color: #3538cd; }
+    .pill.player { background: #ecfdf3; color: #027a48; }
+    .pill.pending { background: #fff6ed; color: #c4320a; }
+    .pill.blocked { background: #fef3f2; color: #b42318; }
+
+    .empty {
+      background: #f9fafb;
+      border: 1px dashed #d0d5dd;
+      color: var(--muted);
+      border-radius: 16px;
+      padding: 22px;
+      text-align: center;
+      font-size: 15px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      border-bottom: 1px solid #eaecf0;
+      text-align: left;
+      font-size: 15px;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f2f4f7;
+      color: #344054;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+
+    tr.top1 { background: #fffaeb; }
+
+    .ranking-position {
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .form-help {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 14px;
+    }
+
+    .player-game {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .player-game h4 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .player-game .score-row {
+      max-width: none;
+    }
+
+    .payment-box {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .qr-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .qr-card img {
+      width: 240px;
+      height: 240px;
+      max-width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: white;
+    }
+
+    .copy-code {
+      width: 100%;
+      min-height: 120px;
+      font-size: 13px;
+      color: #344054;
+      margin-top: 10px;
+    }
+
+    .highlight-pay {
+      padding: 16px;
+      border-radius: 16px;
+      background: #ecfdf3;
+      color: #027a48;
+      border: 1px solid #abefc6;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+
+    .regulation-text {
+      white-space: pre-wrap;
+      line-height: 1.65;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      color: #344054;
+      font-size: 15px;
+    }
+
+    .regulation-editor {
+      min-height: 360px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1050px) {
+      .login-page { grid-template-columns: 1fr; }
+      .login-hero { padding: 34px 24px; }
+      .login-hero h1 { font-size: 34px; }
+      .login-card-wrap { padding: 24px; }
+
+      .app { display: block; }
+      aside {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-radius: 0 0 22px 22px;
+      }
+
+      nav { display: none; }
+      .mobile-menu { display: block; }
+
+      main { padding: 18px; }
+      .content { max-width: 100%; }
+
+      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8 {
+        grid-column: span 12;
+      }
+
+      .two-columns, .payment-box { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 650px) {
+      .hero { padding: 22px; }
+      .hero h2 { font-size: 24px; }
+
+      .form-row, .form-row-3, .score-row {
+        grid-template-columns: 1fr;
+        max-width: none;
+      }
+
+      .card { padding: 18px; }
+      .games-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <section id="loginPage" class="login-page">
+    <div class="login-hero">
+      <h1>🏆 Bolão da Copa Online</h1>
+      <p>
+        Versão conectada ao Supabase. Os dados ficam salvos no banco online, não mais apenas no navegador.
+      </p>
+      <div class="price-badge">Palpite primeiro, Pix depois</div>
+    </div>
+
+    <div class="login-card-wrap">
+      <div class="login-card">
+        <div class="tabs">
+          <button id="tabLogin" class="tab-btn active" onclick="showLoginTab('login')">Entrar</button>
+          <button id="tabRegister" class="tab-btn" onclick="showLoginTab('register')">Cadastrar</button>
+        </div>
+
+        <div id="loginForm">
+          <h2>Entrar</h2>
+          <p>Acesse como administrador ou jogador cadastrado.</p>
+
+          <div class="field">
+            <label for="loginUser">Usuário</label>
+            <input id="loginUser" placeholder="Ex: admin ou joao" />
+          </div>
+
+          <div class="field">
+            <label for="loginPass">Senha</label>
+            <input id="loginPass" type="password" placeholder="Digite a senha" />
+          </div>
+
+          <button class="btn-primary btn-full" onclick="login()">Entrar</button>
+
+          <div class="hint-box">
+            <strong>Acesso inicial:</strong><br>
+            Usuário: <strong>admin</strong><br>
+            Senha: <strong>1234</strong>
+          </div>
+        </div>
+
+        <div id="registerForm" class="hidden">
+          <h2>Cadastro do jogador</h2>
+          <p>Crie seu acesso. O pagamento será solicitado apenas depois do palpite.</p>
+
+          <div class="field">
+            <label for="regName">Nome completo</label>
+            <input id="regName" placeholder="Ex: João Silva" />
+          </div>
+
+          <div class="field">
+            <label for="regPhone">Telefone / WhatsApp</label>
+            <input id="regPhone" placeholder="Ex: (89) 99999-9999" />
+          </div>
+
+          <div class="field">
+            <label for="regUser">Usuário para login</label>
+            <input id="regUser" placeholder="Ex: joao2026" />
+          </div>
+
+          <div class="field">
+            <label for="regPass">Senha</label>
+            <input id="regPass" type="password" placeholder="Crie uma senha" />
+          </div>
+
+          <button class="btn-blue btn-full" onclick="registerPlayer()">Cadastrar jogador</button>
+
+          <div class="hint-box">
+            Depois do cadastro, entre no sistema, faça o palpite e depois pague via QR Code Pix.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="appPage" class="app hidden">
+    <aside>
+      <div class="brand">
+        <h1>🏆 Bolão da Copa</h1>
+        <p>Dados salvos no Supabase.</p>
+        <div class="user-pill">
+          <strong id="currentUserName">Usuário</strong><br>
+          <span id="currentUserRole" class="pill admin">Admin</span>
+          <div id="currentPaymentStatus" style="margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <select class="mobile-menu" id="mobileMenu" onchange="goToScreen(this.value)"></select>
+
+      <nav id="sideMenu"></nav>
+
+      <button class="logout-btn" onclick="logout()">Sair</button>
+    </aside>
+
+    <main>
+      <div class="content">
+        <div class="hero">
+          <h2 id="screenTitle">Dashboard</h2>
+          <p id="screenSubtitle">Visão geral do bolão.</p>
+        </div>
+
+        <div id="msg" class="message"></div>
+
+        <section id="admin_dashboard" class="screen">
+          <div class="grid">
+            <div class="card span-3 stat-card">
+              <div class="stat-number" id="statPlayers">0</div>
+              <div class="stat-label">Jogadores</div>
+            </div>
+            <div class="card span-3 stat-card">
+              <div class="stat-number" id="statPending">0</div>
+              <div class="stat-label">Pagamentos pendentes</div>
+            </div>
+            <div class="card span-3 stat-card">
+              <div class="stat-number" id="statGuesses">0</div>
+              <div class="stat-label">Palpites registrados</div>
+            </div>
+            <div class="card span-3 stat-card">
+              <div class="stat-number" id="statFinished">0</div>
+              <div class="stat-label">Jogos finalizados</div>
+            </div>
+
+            <div class="card span-6">
+              <h3>🏆 Líder atual</h3>
+              <div id="adminLeaderBox"></div>
+            </div>
+
+            <div class="card span-6">
+              <h3>📌 Jogos abertos</h3>
+              <div id="adminOpenGamesBox"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="admin_players" class="screen">
+          <div class="card">
+            <h3>Jogadores cadastrados</h3>
+            <div id="playersList"></div>
+          </div>
+        </section>
+
+        <section id="admin_payments" class="screen">
+          <div class="card">
+            <h3>Pagamentos Pix</h3>
+            <p class="muted">Aprove o pagamento para validar o jogador no ranking.</p>
+            <div id="paymentsList"></div>
+          </div>
+        </section>
+
+        <section id="admin_games" class="screen">
+          <div class="card" style="margin-bottom:18px;">
+            <h3>Cadastrar jogo</h3>
+            <div class="form-row-3">
+              <div>
+                <label for="gameDate">Data e hora</label>
+                <input id="gameDate" type="datetime-local" />
+              </div>
+              <div>
+                <label for="teamA">Time A</label>
+                <input id="teamA" placeholder="Ex: Brasil" />
+              </div>
+              <div>
+                <label for="teamB">Time B</label>
+                <input id="teamB" placeholder="Ex: Argentina" />
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn-blue" onclick="addGame()">Adicionar jogo</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Jogos cadastrados</h3>
+            <p class="muted">Todos os jogos abertos aparecem automaticamente para os jogadores.</p>
+            <div id="gamesList"></div>
+          </div>
+        </section>
+
+        <section id="admin_results" class="screen">
+          <div class="two-columns">
+            <div class="card">
+              <h3>Lançar resultado manualmente</h3>
+
+              <div class="field">
+                <label for="resultGame">Jogo</label>
+                <select id="resultGame"></select>
+              </div>
+
+              <div class="score-row">
+                <div>
+                  <label for="resultA">Gols Time A</label>
+                  <input id="resultA" type="number" min="0" placeholder="0" />
+                </div>
+                <div>
+                  <label for="resultB">Gols Time B</label>
+                  <input id="resultB" type="number" min="0" placeholder="0" />
+                </div>
+              </div>
+
+              <button class="btn-blue" onclick="saveResult()">Salvar resultado</button>
+
+              <div class="form-help">
+                Ao salvar o resultado, o ranking é recalculado automaticamente.
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Jogos finalizados</h3>
+              <div id="finishedGamesList"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="admin_guesses" class="screen">
+          <div class="card">
+            <h3>Todos os palpites</h3>
+            <div id="allGuessesList"></div>
+          </div>
+        </section>
+
+        <section id="admin_ranking" class="screen">
+          <div class="card">
+            <h3>Ranking geral</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Posição</th>
+                    <th>Jogador</th>
+                    <th>Pontos</th>
+                    <th>Palpites</th>
+                    <th>Placar exato</th>
+                    <th>Resultado correto</th>
+                  </tr>
+                </thead>
+                <tbody id="rankingBodyAdmin"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="admin_regulation" class="screen">
+          <div class="card">
+            <h3>Editar regulamento</h3>
+            <p class="muted">O texto abaixo será exibido para os jogadores.</p>
+            <div class="field">
+              <label for="adminRegulationText">Regulamento</label>
+              <textarea id="adminRegulationText" class="regulation-editor"></textarea>
+            </div>
+            <button class="btn-primary" onclick="saveRegulation()">Salvar regulamento</button>
+          </div>
+        </section>
+
+        <section id="admin_settings" class="screen">
+          <div class="grid">
+            <div class="card span-6">
+              <h3>Configuração do Pix</h3>
+              <div class="field">
+                <label for="configPixKey">Chave Pix</label>
+                <input id="configPixKey" placeholder="Digite sua chave Pix" />
+              </div>
+              <div class="field">
+                <label for="configPixName">Nome do recebedor</label>
+                <input id="configPixName" placeholder="Ex: Ricardo Ribeiro" />
+              </div>
+              <div class="field">
+                <label for="configPixCity">Cidade do recebedor</label>
+                <input id="configPixCity" placeholder="Ex: Sao Raimundo Nonato" />
+              </div>
+              <button class="btn-primary" onclick="savePixConfig()">Salvar Pix</button>
+            </div>
+
+            <div class="card span-6">
+              <h3>Regras</h3>
+              <p><strong>Valor:</strong> R$ 10,00 por jogador.</p>
+              <p><strong>Fluxo:</strong> jogador cadastra, faz palpite, paga via QR Code e aguarda aprovação.</p>
+              <p><strong>Resultados:</strong> o administrador lança manualmente o placar final dos jogos.</p>
+              <p><strong>Placar exato:</strong> 5 pontos.</p>
+              <p><strong>Vencedor ou empate correto:</strong> 3 pontos.</p>
+              <p><strong>Gols corretos de um dos times:</strong> 1 ponto.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="player_home" class="screen">
+          <div class="grid">
+            <div class="card span-4 stat-card">
+              <div class="stat-number" id="playerPoints">0</div>
+              <div class="stat-label">Meus pontos</div>
+            </div>
+            <div class="card span-4 stat-card">
+              <div class="stat-number" id="playerGuesses">0</div>
+              <div class="stat-label">Meus palpites</div>
+            </div>
+            <div class="card span-4 stat-card">
+              <div class="stat-number" id="playerPosition">-</div>
+              <div class="stat-label">Minha posição</div>
+            </div>
+
+            <div class="card span-12">
+              <h3>📌 Jogos cadastrados pelo administrador</h3>
+              <div id="playerOpenGamesBox"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="player_bets" class="screen">
+          <div class="card">
+            <h3>Registrar meus palpites</h3>
+            <p class="muted">Escolha o jogo, registre seu palpite e depois faça o pagamento via Pix.</p>
+            <div id="playerBetGames"></div>
+          </div>
+        </section>
+
+        <section id="player_payment" class="screen">
+          <div class="card">
+            <h3>Pagamento Pix</h3>
+            <div id="playerPaymentBox"></div>
+          </div>
+        </section>
+
+        <section id="player_my_guesses" class="screen">
+          <div class="card">
+            <h3>Meus palpites</h3>
+            <div id="playerMyGuesses"></div>
+          </div>
+        </section>
+
+        <section id="player_regulation" class="screen">
+          <div class="card">
+            <h3>Regulamento do Bolão</h3>
+            <p class="muted">Leia com atenção antes de registrar seus palpites.</p>
+            <div id="playerRegulationText" class="regulation-text"></div>
+          </div>
+        </section>
+
+        <section id="player_ranking" class="screen">
+          <div class="card">
+            <h3>Ranking geral</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Posição</th>
+                    <th>Jogador</th>
+                    <th>Pontos</th>
+                    <th>Palpites</th>
+                    <th>Placar exato</th>
+                    <th>Resultado correto</th>
+                  </tr>
+                </thead>
+                <tbody id="rankingBodyPlayer"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </section>
+
+  <script>
+    const SUPABASE_URL = "https://npsirjhnmmmbegxtfnxp.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_VRdDWnOZx3TCERRQX3TPBA_Befz_uEl";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const PRICE = 10;
+    const SESSION_KEY = "bolao_copa_supabase_session";
+
+    let currentUser = null;
+    let db = {
+      usuarios: [],
+      jogos: [],
+      palpites: [],
+      pagamentos: [],
+      configuracoes: null
+    };
+
+    const adminScreens = {
+      admin_dashboard: ["Dashboard do Admin", "Controle geral do bolão."],
+      admin_players: ["Jogadores", "Veja todos os jogadores cadastrados."],
+      admin_payments: ["Pagamentos Pix", "Aprove pagamentos gerados após o palpite."],
+      admin_games: ["Jogos", "Cadastre os confrontos da Copa."],
+      admin_results: ["Resultados", "Lance manualmente o placar real dos jogos."],
+      admin_guesses: ["Palpites", "Visualize todos os palpites enviados."],
+      admin_ranking: ["Ranking", "Veja a classificação geral."],
+      admin_regulation: ["Regulamento", "Edite as regras que os jogadores irão visualizar."],
+      admin_settings: ["Configurações", "Configure Pix, regras e administração."]
+    };
+
+    const playerScreens = {
+      player_home: ["Área do Jogador", "Veja sua pontuação e seus próximos palpites."],
+      player_bets: ["Registrar Palpites", "Escolha o jogo, grave o palpite e faça o pagamento."],
+      player_payment: ["Pagamento Pix", "Faça o Pix pelo QR Code gerado."],
+      player_my_guesses: ["Histórico de Palpites", "Acompanhe seus palpites e situação do pagamento."],
+      player_regulation: ["Regulamento", "Leia as regras do bolão antes de participar."],
+      player_ranking: ["Ranking", "Veja sua posição no bolão."]
+    };
+
+    function showMsg(text, type = "success") {
+      const msg = document.getElementById("msg");
+      msg.textContent = text || "";
+      msg.className = "message " + (type === "error" ? "error" : "success");
+      msg.style.display = "block";
+      setTimeout(() => msg.style.display = "none", 3500);
+    }
+
+    function showLoginTab(tab) {
+      const login = document.getElementById("loginForm");
+      const register = document.getElementById("registerForm");
+      const tabLogin = document.getElementById("tabLogin");
+      const tabRegister = document.getElementById("tabRegister");
+
+      if (tab === "login") {
+        login.classList.remove("hidden");
+        register.classList.add("hidden");
+        tabLogin.classList.add("active");
+        tabRegister.classList.remove("active");
+      } else {
+        login.classList.add("hidden");
+        register.classList.remove("hidden");
+        tabLogin.classList.remove("active");
+        tabRegister.classList.add("active");
+      }
+    }
+
+    async function fetchAllData() {
+      const [usuarios, jogos, palpites, pagamentos, configuracoes] = await Promise.all([
+        supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: true }),
+        supabaseClient.from("jogos").select("*").order("data_hora", { ascending: true }),
+        supabaseClient.from("palpites").select("*").order("criado_em", { ascending: true }),
+        supabaseClient.from("pagamentos").select("*").order("criado_em", { ascending: true }),
+        supabaseClient.from("configuracoes").select("*").eq("id", 1).maybeSingle()
+      ]);
+
+      const errors = [usuarios.error, jogos.error, palpites.error, pagamentos.error, configuracoes.error].filter(Boolean);
+      if (errors.length) {
+        throw new Error(errors[0].message);
+      }
+
+      db.usuarios = usuarios.data || [];
+      db.jogos = jogos.data || [];
+      db.palpites = palpites.data || [];
+      db.pagamentos = pagamentos.data || [];
+      db.configuracoes = configuracoes.data || {
+        id: 1,
+        chave_pix: "configure-sua-chave-pix",
+        nome_recebedor: "ADMINISTRADOR BOLAO",
+        cidade_recebedor: "SAO PAULO",
+        valor_participacao: 10,
+        regulamento: "Regulamento ainda não cadastrado."
+      };
+    }
+
+    async function registerPlayer() {
+      const nome = document.getElementById("regName").value.trim();
+      const telefone = document.getElementById("regPhone").value.trim();
+      const usuario = document.getElementById("regUser").value.trim();
+      const senha = document.getElementById("regPass").value.trim();
+
+      if (!nome || !telefone || !usuario || !senha) {
+        alert("Preencha nome, telefone, usuário e senha.");
+        return;
+      }
+
+      const exists = await supabaseClient
+        .from("usuarios")
+        .select("id")
+        .eq("usuario", usuario)
+        .maybeSingle();
+
+      if (exists.data) {
+        alert("Esse usuário já existe. Escolha outro.");
+        return;
+      }
+
+      const { error } = await supabaseClient.from("usuarios").insert({
+        nome,
+        telefone,
+        usuario,
+        senha,
+        tipo: "jogador"
+      });
+
+      if (error) {
+        alert("Erro ao cadastrar: " + error.message);
+        return;
+      }
+
+      document.getElementById("regName").value = "";
+      document.getElementById("regPhone").value = "";
+      document.getElementById("regUser").value = "";
+      document.getElementById("regPass").value = "";
+
+      alert("Cadastro realizado! Agora entre, registre seu palpite e depois faça o Pix pelo QR Code.");
+      showLoginTab("login");
+    }
+
+    async function login() {
+      const usuario = document.getElementById("loginUser").value.trim();
+      const senha = document.getElementById("loginPass").value.trim();
+
+      if (!usuario || !senha) {
+        alert("Informe usuário e senha.");
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("usuarios")
+        .select("*")
+        .eq("usuario", usuario)
+        .eq("senha", senha)
+        .maybeSingle();
+
+      if (error) {
+        alert("Erro ao entrar: " + error.message);
+        return;
+      }
+
+      if (!data) {
+        alert("Usuário ou senha inválidos.");
+        return;
+      }
+
+      currentUser = data;
+      sessionStorage.setItem(SESSION_KEY, data.id);
+
+      document.getElementById("loginUser").value = "";
+      document.getElementById("loginPass").value = "";
+
+      await openApp();
+    }
+
+    function logout() {
+      currentUser = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      document.getElementById("appPage").classList.add("hidden");
+      document.getElementById("loginPage").classList.remove("hidden");
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+    }
+
+    async function restoreSession() {
+      const userId = sessionStorage.getItem(SESSION_KEY);
+      if (!userId) return;
+
+      const { data, error } = await supabaseClient.from("usuarios").select("*").eq("id", userId).maybeSingle();
+      if (!error && data) {
+        currentUser = data;
+        await openApp();
+      }
+    }
+
+    async function openApp() {
+      await fetchAllData();
+
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("appPage").classList.remove("hidden");
+
+      document.getElementById("currentUserName").textContent = currentUser.nome;
+      const role = document.getElementById("currentUserRole");
+      role.textContent = currentUser.tipo === "admin" ? "Administrador" : "Jogador";
+      role.className = "pill " + (currentUser.tipo === "admin" ? "admin" : "player");
+
+      buildMenu();
+
+      if (currentUser.tipo === "admin") {
+        goToScreen("admin_dashboard");
+      } else {
+        goToScreen("player_home");
+      }
+
+      render();
+    }
+
+    function buildMenu() {
+      const menu = document.getElementById("sideMenu");
+      const mobile = document.getElementById("mobileMenu");
+
+      let items = [];
+
+      if (currentUser.tipo === "admin") {
+        items = [
+          ["admin_dashboard", "📊 Dashboard"],
+          ["admin_players", "👤 Jogadores"],
+          ["admin_payments", "💸 Pagamentos Pix"],
+          ["admin_games", "⚽ Jogos"],
+          ["admin_results", "✅ Resultados"],
+          ["admin_guesses", "📝 Palpites"],
+          ["admin_ranking", "🏅 Ranking"],
+          ["admin_regulation", "📜 Regulamento"],
+          ["admin_settings", "⚙️ Configurações"]
+        ];
+      } else {
+        items = [
+          ["player_home", "🏠 Início"],
+          ["player_bets", "📝 Registrar palpites"],
+          ["player_payment", "💸 Pagamento Pix"],
+          ["player_my_guesses", "📋 Meus palpites"],
+          ["player_regulation", "📜 Regulamento"],
+          ["player_ranking", "🏅 Ranking"]
+        ];
+      }
+
+      menu.innerHTML = items.map(item => `
+        <button class="menu-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">${item[1]}</button>
+      `).join("");
+
+      mobile.innerHTML = items.map(item => `<option value="${item[0]}">${item[1]}</option>`).join("");
+    }
+
+    function goToScreen(screen) {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+      document.getElementById(screen).classList.add("active");
+
+      document.querySelectorAll(".menu-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.screen === screen);
+      });
+
+      document.getElementById("mobileMenu").value = screen;
+
+      const info = currentUser.tipo === "admin" ? adminScreens[screen] : playerScreens[screen];
+      document.getElementById("screenTitle").textContent = info[0];
+      document.getElementById("screenSubtitle").textContent = info[1];
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function paymentStatusLabel(status) {
+      if (status === "aprovado") return `<span class="pill finished">Aprovado</span>`;
+      if (status === "rejeitado") return `<span class="pill blocked">Rejeitado</span>`;
+      if (status === "pendente") return `<span class="pill pending">Pendente</span>`;
+      return `<span class="pill warning">Sem pagamento</span>`;
+    }
+
+    function getUserPayment(userId) {
+      return db.pagamentos.find(p => p.usuario_id === userId);
+    }
+
+    function getUserPaymentStatus(userId) {
+      const payment = getUserPayment(userId);
+      return payment ? payment.status : "sem_pagamento";
+    }
+
+    function isUserApproved(userId) {
+      return getUserPaymentStatus(userId) === "aprovado";
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      return isNaN(date) ? value : date.toLocaleString("pt-BR");
+    }
+
+    function resultType(a, b) {
+      if (a > b) return "A";
+      if (a < b) return "B";
+      return "E";
+    }
+
+    function calculateGuessPoints(guess, game) {
+      if (!game || game.status !== "finalizado") {
+        return { points: 0, exact: false, resultCorrect: false };
+      }
+
+      const exact = guess.palpite_a === game.resultado_a && guess.palpite_b === game.resultado_b;
+      const resultCorrect = resultType(guess.palpite_a, guess.palpite_b) === resultType(game.resultado_a, game.resultado_b);
+
+      let points = 0;
+
+      if (exact) {
+        points += 5;
+      } else {
+        if (resultCorrect) points += 3;
+        if (guess.palpite_a === game.resultado_a) points += 1;
+        if (guess.palpite_b === game.resultado_b) points += 1;
+      }
+
+      return { points, exact, resultCorrect };
+    }
+
+    function buildRanking() {
+      const players = db.usuarios.filter(u => u.tipo === "jogador" && isUserApproved(u.id));
+
+      return players.map(player => {
+        const playerGuesses = db.palpites.filter(g => g.usuario_id === player.id);
+        let points = 0;
+        let exacts = 0;
+        let resultHits = 0;
+
+        playerGuesses.forEach(guess => {
+          const game = db.jogos.find(g => g.id === guess.jogo_id);
+          const score = calculateGuessPoints(guess, game);
+
+          points += score.points;
+          if (score.exact) exacts++;
+          if (score.resultCorrect && game && game.status === "finalizado") resultHits++;
+        });
+
+        return {
+          userId: player.id,
+          name: player.nome,
+          points,
+          guesses: playerGuesses.length,
+          exacts,
+          resultHits
+        };
+      }).sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.exacts !== a.exacts) return b.exacts - a.exacts;
+        return a.name.localeCompare(b.name);
+      });
+    }
+
+    async function addGame() {
+      const data_hora = document.getElementById("gameDate").value;
+      const time_a = document.getElementById("teamA").value.trim();
+      const time_b = document.getElementById("teamB").value.trim();
+
+      if (!data_hora || !time_a || !time_b) {
+        return showMsg("Preencha data, time A e time B.", "error");
+      }
+
+      if (time_a.toLowerCase() === time_b.toLowerCase()) {
+        return showMsg("Os times precisam ser diferentes.", "error");
+      }
+
+      const { error } = await supabaseClient.from("jogos").insert({
+        data_hora,
+        time_a,
+        time_b,
+        status: "aberto"
+      });
+
+      if (error) {
+        return showMsg("Erro ao cadastrar jogo: " + error.message, "error");
+      }
+
+      document.getElementById("gameDate").value = "";
+      document.getElementById("teamA").value = "";
+      document.getElementById("teamB").value = "";
+
+      await fetchAllData();
+      render();
+      showMsg("Jogo cadastrado com sucesso. Ele já aparece para os jogadores.");
+    }
+
+    async function deleteGame(gameId) {
+      const ok = confirm("Deseja excluir este jogo e todos os palpites ligados a ele?");
+      if (!ok) return;
+
+      const { error } = await supabaseClient.from("jogos").delete().eq("id", gameId);
+
+      if (error) {
+        return showMsg("Erro ao excluir jogo: " + error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Jogo excluído.");
+    }
+
+    async function saveResult() {
+      const gameId = document.getElementById("resultGame").value;
+      const resultAInput = document.getElementById("resultA").value;
+      const resultBInput = document.getElementById("resultB").value;
+
+      if (!gameId) return showMsg("Selecione um jogo.", "error");
+      if (resultAInput === "" || resultBInput === "") return showMsg("Informe os dois resultados.", "error");
+
+      const resultado_a = Number(resultAInput);
+      const resultado_b = Number(resultBInput);
+
+      if (Number.isNaN(resultado_a) || Number.isNaN(resultado_b) || resultado_a < 0 || resultado_b < 0) {
+        return showMsg("Informe resultados válidos.", "error");
+      }
+
+      const { error } = await supabaseClient
+        .from("jogos")
+        .update({ resultado_a, resultado_b, status: "finalizado" })
+        .eq("id", gameId);
+
+      if (error) {
+        return showMsg("Erro ao salvar resultado: " + error.message, "error");
+      }
+
+      document.getElementById("resultA").value = "";
+      document.getElementById("resultB").value = "";
+
+      await fetchAllData();
+      render();
+      showMsg("Resultado salvo. Ranking atualizado.");
+    }
+
+    async function savePlayerGuess(gameId) {
+      const aInput = document.getElementById("guessA_" + gameId);
+      const bInput = document.getElementById("guessB_" + gameId);
+
+      const game = db.jogos.find(g => g.id === gameId);
+      if (!game || game.status === "finalizado") {
+        return showMsg("Este jogo está bloqueado para palpites.", "error");
+      }
+
+      if (aInput.value === "" || bInput.value === "") {
+        return showMsg("Informe os dois placares.", "error");
+      }
+
+      const palpite_a = Number(aInput.value);
+      const palpite_b = Number(bInput.value);
+
+      if (Number.isNaN(palpite_a) || Number.isNaN(palpite_b) || palpite_a < 0 || palpite_b < 0) {
+        return showMsg("Informe placares válidos.", "error");
+      }
+
+      const existing = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === gameId);
+
+      let guessError = null;
+
+      if (existing) {
+        const result = await supabaseClient
+          .from("palpites")
+          .update({ palpite_a, palpite_b, atualizado_em: new Date().toISOString() })
+          .eq("id", existing.id);
+        guessError = result.error;
+      } else {
+        const result = await supabaseClient.from("palpites").insert({
+          usuario_id: currentUser.id,
+          jogo_id: gameId,
+          palpite_a,
+          palpite_b
+        });
+        guessError = result.error;
+      }
+
+      if (guessError) {
+        return showMsg("Erro ao salvar palpite: " + guessError.message, "error");
+      }
+
+      let payment = getUserPayment(currentUser.id);
+
+      if (!payment) {
+        const txid = ("BOLAO" + currentUser.id.replace(/[^a-zA-Z0-9]/g, "")).slice(0, 25);
+        const payResult = await supabaseClient.from("pagamentos").insert({
+          usuario_id: currentUser.id,
+          valor: Number(db.configuracoes.valor_participacao || PRICE),
+          status: "pendente",
+          txid
+        });
+
+        if (payResult.error) {
+          return showMsg("Palpite salvo, mas erro ao gerar pagamento: " + payResult.error.message, "error");
+        }
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Palpite registrado. Agora faça o pagamento via Pix.");
+      goToScreen("player_payment");
+    }
+
+    async function approvePayment(paymentId) {
+      const { error } = await supabaseClient
+        .from("pagamentos")
+        .update({ status: "aprovado", atualizado_em: new Date().toISOString() })
+        .eq("id", paymentId);
+
+      if (error) {
+        return showMsg("Erro ao aprovar pagamento: " + error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Pagamento aprovado. Jogador validado no ranking.");
+    }
+
+    async function rejectPayment(paymentId) {
+      const ok = confirm("Deseja rejeitar este pagamento?");
+      if (!ok) return;
+
+      const { error } = await supabaseClient
+        .from("pagamentos")
+        .update({ status: "rejeitado", atualizado_em: new Date().toISOString() })
+        .eq("id", paymentId);
+
+      if (error) {
+        return showMsg("Erro ao rejeitar pagamento: " + error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Pagamento rejeitado.");
+    }
+
+    async function setPaymentPending(paymentId) {
+      const { error } = await supabaseClient
+        .from("pagamentos")
+        .update({ status: "pendente", atualizado_em: new Date().toISOString() })
+        .eq("id", paymentId);
+
+      if (error) {
+        return showMsg("Erro ao alterar pagamento: " + error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Pagamento voltou para pendente.");
+    }
+
+    async function deletePlayer(playerId) {
+      const ok = confirm("Deseja excluir este jogador, pagamento e todos os palpites dele?");
+      if (!ok) return;
+
+      const { error } = await supabaseClient.from("usuarios").delete().eq("id", playerId);
+
+      if (error) {
+        return showMsg("Erro ao excluir jogador: " + error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Jogador excluído.");
+    }
+
+    async function savePixConfig() {
+      const chave_pix = document.getElementById("configPixKey").value.trim();
+      const nome_recebedor = document.getElementById("configPixName").value.trim();
+      const cidade_recebedor = document.getElementById("configPixCity").value.trim();
+
+      if (!chave_pix || !nome_recebedor || !cidade_recebedor) {
+        return showMsg("Informe chave Pix, nome e cidade do recebedor.", "error");
+      }
+
+      const { error } = await supabaseClient
+        .from("configuracoes")
+        .update({ chave_pix, nome_recebedor, cidade_recebedor, atualizado_em: new Date().toISOString() })
+        .eq("id", 1);
+
+      if (error) {
+        return showMsg("Erro ao salvar Pix: " + error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Configuração Pix salva.");
+    }
+
+    async function saveRegulation() {
+      const regulamento = document.getElementById("adminRegulationText").value.trim();
+
+      if (!regulamento) {
+        return showMsg("O regulamento não pode ficar vazio.", "error");
+      }
+
+      const { error } = await supabaseClient
+        .from("configuracoes")
+        .update({ regulamento, atualizado_em: new Date().toISOString() })
+        .eq("id", 1);
+
+      if (error) {
+        return showMsg("Erro ao salvar regulamento: " + error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Regulamento salvo.");
+    }
+
+    function sanitizePixText(value, max) {
+      return (value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^A-Za-z0-9 .@_-]/g, "")
+        .toUpperCase()
+        .slice(0, max);
+    }
+
+    function emv(id, value) {
+      const size = String(value.length).padStart(2, "0");
+      return id + size + value;
+    }
+
+    function crc16(payload) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < payload.length; i++) {
+        crc ^= payload.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+          if ((crc & 0x8000) !== 0) {
+            crc = (crc << 1) ^ 0x1021;
+          } else {
+            crc = crc << 1;
+          }
+          crc &= 0xFFFF;
+        }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, "0");
+    }
+
+    function generatePixPayload(payment) {
+      const pixKey = db.configuracoes.chave_pix || "configure-sua-chave-pix";
+      const merchantName = sanitizePixText(db.configuracoes.nome_recebedor || "ADMINISTRADOR BOLAO", 25);
+      const merchantCity = sanitizePixText(db.configuracoes.cidade_recebedor || "SAO PAULO", 15);
+      const txid = sanitizePixText(payment.txid || "BOLAO", 25);
+      const amount = Number(payment.valor || PRICE).toFixed(2);
+
+      const gui = emv("00", "br.gov.bcb.pix");
+      const key = emv("01", pixKey);
+      const description = emv("02", "Bolao Copa");
+      const merchantAccountInfo = emv("26", gui + key + description);
+
+      let payload = "";
+      payload += emv("00", "01");
+      payload += emv("01", "12");
+      payload += merchantAccountInfo;
+      payload += emv("52", "0000");
+      payload += emv("53", "986");
+      payload += emv("54", amount);
+      payload += emv("58", "BR");
+      payload += emv("59", merchantName);
+      payload += emv("60", merchantCity);
+      payload += emv("62", emv("05", txid));
+      payload += "6304";
+
+      return payload + crc16(payload);
+    }
+
+    function copyPixCode() {
+      const text = document.getElementById("pixCopyCode").value;
+      navigator.clipboard.writeText(text).then(() => {
+        showMsg("Código Pix copiado.");
+      }).catch(() => {
+        alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
+      });
+    }
+
+    function renderAdminDashboard() {
+      const players = db.usuarios.filter(u => u.tipo === "jogador");
+      document.getElementById("statPlayers").textContent = players.length;
+      document.getElementById("statPending").textContent = db.pagamentos.filter(p => p.status === "pendente").length;
+      document.getElementById("statGuesses").textContent = db.palpites.length;
+      document.getElementById("statFinished").textContent = db.jogos.filter(g => g.status === "finalizado").length;
+
+      const ranking = buildRanking();
+      const leaderBox = document.getElementById("adminLeaderBox");
+
+      if (ranking.length === 0) {
+        leaderBox.innerHTML = `<div class="empty">Ainda não há jogadores aprovados no ranking.</div>`;
+      } else {
+        const leader = ranking[0];
+        leaderBox.innerHTML = `
+          <div class="list-card">
+            <div class="list-title">
+              <strong>🥇 ${leader.name}</strong>
+              <span class="pill finished">${leader.points} pontos</span>
+            </div>
+            <p class="muted">${leader.guesses} palpites | ${leader.exacts} placares exatos</p>
+          </div>
+        `;
+      }
+
+      const openGames = db.jogos.filter(g => g.status === "aberto").slice(0, 5);
+      document.getElementById("adminOpenGamesBox").innerHTML = openGames.length
+        ? openGames.map(g => `
+          <div class="list-card">
+            <div class="list-title">
+              <strong>${g.time_a} x ${g.time_b}</strong>
+              <span class="pill open">Aberto</span>
+            </div>
+            <p class="muted">${formatDate(g.data_hora)}</p>
+          </div>
+        `).join("")
+        : `<div class="empty">Nenhum jogo aberto.</div>`;
+    }
+
+    function renderPlayers() {
+      const players = db.usuarios.filter(u => u.tipo === "jogador");
+      const box = document.getElementById("playersList");
+
+      if (players.length === 0) {
+        box.innerHTML = `<div class="empty">Nenhum jogador cadastrado.</div>`;
+        return;
+      }
+
+      box.innerHTML = `<div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Jogador</th>
+              <th>Usuário</th>
+              <th>Telefone</th>
+              <th>Pagamento</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${players.map(player => `
+              <tr>
+                <td><strong>${player.nome}</strong></td>
+                <td>${player.usuario}</td>
+                <td>${player.telefone || "-"}</td>
+                <td>${paymentStatusLabel(getUserPaymentStatus(player.id))}</td>
+                <td><button class="btn-danger" onclick="deletePlayer('${player.id}')">Excluir</button></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>`;
+    }
+
+    function renderPayments() {
+      const box = document.getElementById("paymentsList");
+
+      if (db.pagamentos.length === 0) {
+        box.innerHTML = `<div class="empty">Nenhum pagamento gerado ainda.</div>`;
+        return;
+      }
+
+      const sorted = db.pagamentos.slice().sort((a, b) => {
+        const order = { pendente: 0, aprovado: 1, rejeitado: 2 };
+        return (order[a.status] ?? 3) - (order[b.status] ?? 3);
+      });
+
+      box.innerHTML = sorted.map(payment => {
+        const player = db.usuarios.find(u => u.id === payment.usuario_id);
+        const guesses = db.palpites.filter(g => g.usuario_id === payment.usuario_id);
+
+        return `
+          <div class="list-card">
+            <div class="list-title">
+              <strong>${player ? player.nome : "Jogador removido"}</strong>
+              ${paymentStatusLabel(payment.status)}
+            </div>
+            <p><strong>Telefone:</strong> ${player ? player.telefone || "-" : "-"}</p>
+            <p><strong>Valor:</strong> R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</p>
+            <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
+            <p><strong>Palpites registrados:</strong> ${guesses.length}</p>
+            <div class="actions">
+              <button class="btn-primary" onclick="approvePayment('${payment.id}')">Aprovar pagamento</button>
+              <button class="btn-orange" onclick="setPaymentPending('${payment.id}')">Voltar para pendente</button>
+              <button class="btn-danger" onclick="rejectPayment('${payment.id}')">Rejeitar</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderGames() {
+      const gamesList = document.getElementById("gamesList");
+
+      if (db.jogos.length === 0) {
+        gamesList.innerHTML = `<div class="empty">Nenhum jogo cadastrado.</div>`;
+      } else {
+        gamesList.innerHTML = `<div class="games-grid">` + db.jogos
+          .slice()
+          .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))
+          .map(game => `
+            <div class="list-card">
+              <div class="list-title">
+                <strong>${game.time_a} x ${game.time_b}</strong>
+                <span class="pill ${game.status === "finalizado" ? "finished" : "open"}">${game.status === "finalizado" ? "Finalizado" : "Aberto"}</span>
+              </div>
+              <p class="muted">${formatDate(game.data_hora)}</p>
+              ${game.status === "finalizado" ? `<p><strong>Resultado:</strong> ${game.resultado_a} x ${game.resultado_b}</p>` : ""}
+              <div class="actions">
+                <button class="btn-danger" onclick="deleteGame('${game.id}')">Excluir</button>
+              </div>
+            </div>
+          `).join("") + `</div>`;
+      }
+
+      const resultOptions = `<option value="">Selecione o jogo</option>` + db.jogos
+        .map(g => `<option value="${g.id}">${formatDate(g.data_hora)} - ${g.time_a} x ${g.time_b} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
+        .join("");
+
+      document.getElementById("resultGame").innerHTML = resultOptions;
+    }
+
+    function renderFinishedGames() {
+      const finished = db.jogos.filter(g => g.status === "finalizado");
+      const box = document.getElementById("finishedGamesList");
+
+      if (finished.length === 0) {
+        box.innerHTML = `<div class="empty">Nenhum resultado lançado ainda.</div>`;
+        return;
+      }
+
+      box.innerHTML = finished.map(game => `
+        <div class="list-card">
+          <div class="list-title">
+            <strong>${game.time_a} ${game.resultado_a} x ${game.resultado_b} ${game.time_b}</strong>
+            <span class="pill finished">Finalizado</span>
+          </div>
+          <p class="muted">${formatDate(game.data_hora)}</p>
+        </div>
+      `).join("");
+    }
+
+    function renderAllGuesses() {
+      const box = document.getElementById("allGuessesList");
+
+      if (db.palpites.length === 0) {
+        box.innerHTML = `<div class="empty">Nenhum palpite registrado.</div>`;
+        return;
+      }
+
+      box.innerHTML = `<div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Jogador</th>
+              <th>Jogo</th>
+              <th>Palpite</th>
+              <th>Resultado</th>
+              <th>Pagamento</th>
+              <th>Pontos</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${db.palpites.map(guess => {
+              const player = db.usuarios.find(u => u.id === guess.usuario_id);
+              const game = db.jogos.find(g => g.id === guess.jogo_id);
+              if (!player || !game) return "";
+
+              const score = calculateGuessPoints(guess, game);
+              const payStatus = getUserPaymentStatus(player.id);
+              const valid = payStatus === "aprovado";
+
+              return `
+                <tr>
+                  <td><strong>${player.nome}</strong></td>
+                  <td>${game.time_a} x ${game.time_b}</td>
+                  <td>${guess.palpite_a} x ${guess.palpite_b}</td>
+                  <td>${game.status === "finalizado" ? game.resultado_a + " x " + game.resultado_b : "-"}</td>
+                  <td>${paymentStatusLabel(payStatus)}</td>
+                  <td><strong>${game.status === "finalizado" && valid ? score.points : "-"}</strong></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`;
+    }
+
+    function renderRankingTable(tbodyId) {
+      const tbody = document.getElementById(tbodyId);
+      const ranking = buildRanking();
+
+      if (ranking.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#667085;">Nenhum jogador aprovado no ranking.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = ranking.map((item, index) => `
+        <tr class="${index === 0 ? "top1" : ""}">
+          <td class="ranking-position">${index + 1}º</td>
+          <td>${index === 0 ? "🥇 " : ""}${item.name}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
+          <td><strong>${item.points}</strong></td>
+          <td>${item.guesses}</td>
+          <td>${item.exacts}</td>
+          <td>${item.resultHits}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderPlayerHome() {
+      if (!currentUser || currentUser.tipo !== "jogador") return;
+
+      const ranking = buildRanking();
+      const me = ranking.find(r => r.userId === currentUser.id);
+      const position = ranking.findIndex(r => r.userId === currentUser.id) + 1;
+
+      document.getElementById("playerPoints").textContent = me ? me.points : 0;
+      document.getElementById("playerGuesses").textContent = db.palpites.filter(g => g.usuario_id === currentUser.id).length;
+      document.getElementById("playerPosition").textContent = position > 0 ? position + "º" : "-";
+
+      const openGames = db.jogos.filter(g => g.status === "aberto").sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora)).slice(0, 5);
+      const payStatus = getUserPaymentStatus(currentUser.id);
+
+      document.getElementById("playerOpenGamesBox").innerHTML = openGames.length
+        ? openGames.map(game => {
+          const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
+          return `
+            <div class="list-card">
+              <div class="list-title">
+                <strong>${game.time_a} x ${game.time_b}</strong>
+                <span class="pill ${guess ? "finished" : "warning"}">${guess ? "Palpite feito" : "Disponível"}</span>
+              </div>
+              <p class="muted">${formatDate(game.data_hora)}</p>
+              ${guess ? `<p>Seu palpite: <strong>${guess.palpite_a} x ${guess.palpite_b}</strong></p>` : ""}
+              <p>Pagamento: ${paymentStatusLabel(payStatus)}</p>
+            </div>
+          `;
+        }).join("")
+        : `<div class="empty"><strong>Nenhum jogo disponível.</strong><br>Assim que o administrador cadastrar os jogos, eles aparecerão aqui.</div>`;
+    }
+
+    function renderPlayerBetGames() {
+      const box = document.getElementById("playerBetGames");
+      if (!currentUser || currentUser.tipo !== "jogador") return;
+
+      const openGames = db.jogos.filter(g => g.status === "aberto").sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora));
+
+      if (openGames.length === 0) {
+        box.innerHTML = `<div class="empty"><strong>Nenhum jogo disponível.</strong><br>O administrador ainda não cadastrou jogos abertos para palpite.</div>`;
+        return;
+      }
+
+      const payStatus = getUserPaymentStatus(currentUser.id);
+
+      box.innerHTML = `<div class="games-grid">` + openGames.map(game => {
+        const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
+
+        return `
+          <div class="player-game">
+            <div class="list-title">
+              <h4>${game.time_a} x ${game.time_b}</h4>
+              <span class="pill ${guess ? "finished" : "open"}">${guess ? "Já registrou" : "Disponível"}</span>
+            </div>
+            <p class="muted">${formatDate(game.data_hora)}</p>
+            <p>Pagamento: ${paymentStatusLabel(payStatus)}</p>
+
+            <div class="score-row">
+              <div>
+                <label>${game.time_a}</label>
+                <input id="guessA_${game.id}" type="number" min="0" value="${guess ? guess.palpite_a : ""}" placeholder="0" ${payStatus === "aprovado" ? "disabled" : ""} />
+              </div>
+              <div>
+                <label>${game.time_b}</label>
+                <input id="guessB_${game.id}" type="number" min="0" value="${guess ? guess.palpite_b : ""}" placeholder="0" ${payStatus === "aprovado" ? "disabled" : ""} />
+              </div>
+            </div>
+
+            <button class="btn-primary" onclick="savePlayerGuess('${game.id}')" ${payStatus === "aprovado" ? "disabled" : ""}>
+              ${guess ? "Atualizar e ir para pagamento" : "Registrar palpite"}
+            </button>
+          </div>
+        `;
+      }).join("") + `</div>`;
+    }
+
+    function renderPlayerPayment() {
+      const box = document.getElementById("playerPaymentBox");
+      if (!currentUser || currentUser.tipo !== "jogador") return;
+
+      const payment = getUserPayment(currentUser.id);
+      const myGuesses = db.palpites.filter(g => g.usuario_id === currentUser.id);
+
+      if (!payment || myGuesses.length === 0) {
+        box.innerHTML = `
+          <div class="empty">
+            Você ainda não registrou nenhum palpite. Primeiro vá em <strong>Registrar Palpites</strong>.
+          </div>
+        `;
+        return;
+      }
+
+      const payload = generatePixPayload(payment);
+      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(payload);
+
+      box.innerHTML = `
+        <div class="highlight-pay">
+          <strong>Palpite registrado com sucesso.</strong><br>
+          Agora faça o Pix de <strong>R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</strong>.
+          Depois, aguarde o administrador aprovar o pagamento.
+        </div>
+
+        <div class="payment-box">
+          <div class="qr-card">
+            <img src="${qrUrl}" alt="QR Code Pix">
+            <p class="muted">Escaneie o QR Code no aplicativo do seu banco.</p>
+            ${paymentStatusLabel(payment.status)}
+          </div>
+
+          <div>
+            <h3>Pix Copia e Cola</h3>
+            <p><strong>Recebedor:</strong> ${db.configuracoes.nome_recebedor || "-"}</p>
+            <p><strong>Chave Pix:</strong> ${db.configuracoes.chave_pix || "-"}</p>
+            <p><strong>Valor:</strong> R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</p>
+            <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
+            <textarea id="pixCopyCode" class="copy-code" readonly>${payload}</textarea>
+            <div class="actions">
+              <button class="btn-primary" onclick="copyPixCode()">Copiar código Pix</button>
+              <button class="btn-muted" onclick="goToScreen('player_my_guesses')">Ver meus palpites</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPlayerMyGuesses() {
+      const box = document.getElementById("playerMyGuesses");
+      if (!currentUser || currentUser.tipo !== "jogador") return;
+
+      const myGuesses = db.palpites.filter(g => g.usuario_id === currentUser.id);
+      const payStatus = getUserPaymentStatus(currentUser.id);
+
+      if (myGuesses.length === 0) {
+        box.innerHTML = `<div class="empty">Você ainda não registrou nenhum palpite.</div>`;
+        return;
+      }
+
+      box.innerHTML = `
+        <div class="form-help" style="margin-bottom:14px;">
+          Situação do pagamento: ${paymentStatusLabel(payStatus)}
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Jogo</th>
+                <th>Data</th>
+                <th>Meu palpite</th>
+                <th>Resultado</th>
+                <th>Pontos</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${myGuesses.map(guess => {
+                const game = db.jogos.find(g => g.id === guess.jogo_id);
+                if (!game) return "";
+
+                const score = calculateGuessPoints(guess, game);
+                const valid = payStatus === "aprovado";
+
+                return `
+                  <tr>
+                    <td><strong>${game.time_a} x ${game.time_b}</strong></td>
+                    <td>${formatDate(game.data_hora)}</td>
+                    <td>${guess.palpite_a} x ${guess.palpite_b}</td>
+                    <td>${game.status === "finalizado" ? game.resultado_a + " x " + game.resultado_b : "Aguardando"}</td>
+                    <td><strong>${game.status === "finalizado" && valid ? score.points : "-"}</strong></td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderPixConfig() {
+      const c = db.configuracoes || {};
+      document.getElementById("configPixKey").value = c.chave_pix || "";
+      document.getElementById("configPixName").value = c.nome_recebedor || "";
+      document.getElementById("configPixCity").value = c.cidade_recebedor || "";
+    }
+
+    function renderRegulation() {
+      const adminText = document.getElementById("adminRegulationText");
+      const playerText = document.getElementById("playerRegulationText");
+      const text = db.configuracoes && db.configuracoes.regulamento ? db.configuracoes.regulamento : "Regulamento ainda não cadastrado.";
+
+      if (adminText) adminText.value = text;
+      if (playerText) playerText.textContent = text;
+    }
+
+    function render() {
+      if (!currentUser) return;
+
+      renderAdminDashboard();
+      renderPlayers();
+      renderPayments();
+      renderGames();
+      renderFinishedGames();
+      renderAllGuesses();
+      renderRankingTable("rankingBodyAdmin");
+      renderRankingTable("rankingBodyPlayer");
+      renderPlayerHome();
+      renderPlayerBetGames();
+      renderPlayerPayment();
+      renderPlayerMyGuesses();
+      renderPixConfig();
+      renderRegulation();
+
+      if (currentUser.tipo === "jogador") {
+        document.getElementById("currentPaymentStatus").innerHTML = paymentStatusLabel(getUserPaymentStatus(currentUser.id));
+      } else {
+        document.getElementById("currentPaymentStatus").innerHTML = "";
+      }
+    }
+
+    restoreSession();
+  </script>
+</body>
+</html>
