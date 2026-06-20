@@ -1,34 +1,31 @@
-# Bolão da Copa - PWA/APK com ícone premium
+# Bolão da Copa - Cadastro e Resultado Melhorados
 
-Esta versão já está com os novos ícones renderizados e aplicados ao projeto.
+Melhorias desta versão:
 
-## Ícones gerados
+- Cadastro com confirmação de senha.
+- Recuperação de senha pela tela de login.
+- Área de resultados mais clara para o administrador.
+- Botão: Salvar resultado e atualizar ranking.
+- Ranking atualiza automaticamente após lançar o resultado.
+- Mantém ícone premium, PWA/APK e Supabase Auth + RLS.
 
-A pasta `icons/` contém os tamanhos:
+## Como atualizar o ranking
 
-- 48x48
-- 72x72
-- 96x96
-- 128x128
-- 144x144
-- 152x152
-- 180x180
-- 192x192
-- 384x384
-- 512x512
+No app, entre como admin:
 
-Também foi incluído:
+1. Abra a aba **Resultados**.
+2. Escolha o jogo.
+3. Informe o placar final.
+4. Clique em **Salvar resultado e atualizar ranking**.
 
-- `icone-app-1024.png`
+O sistema finaliza o jogo e recalcula os pontos automaticamente.
 
-## Para atualizar o APK
+## Recuperação de senha
 
-1. Suba todos os arquivos no GitHub Pages.
-2. Aguarde alguns minutos.
-3. Abra o app no navegador e confirme o novo ícone.
-4. Volte no PWABuilder.
-5. Gere o APK novamente.
-6. Desinstale o APK antigo do celular.
-7. Instale o APK novo.
+Na tela de login, clique em:
 
-Se o ícone antigo continuar aparecendo, limpe o cache do navegador ou gere o APK novamente após alguns minutos.
+**Esqueci minha senha**
+
+O Supabase enviará um link de recuperação para o e-mail cadastrado.
+
+Atenção: se aparecer limite de e-mail, configure SMTP próprio no Supabase ou aguarde o limite liberar.
