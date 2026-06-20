@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bolão da Copa Online - Supabase</title>
+  <title>Bolão da Copa Online</title>
+  <meta name="theme-color" content="#07824a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bolão da Copa">
+  <meta name="mobile-web-app-capable" content="yes">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -18,7 +22,8 @@
       --danger: #d92d20;
       --yellow: #f7c948;
       --orange: #f79009;
-      --shadow: 0 12px 30px rgba(16, 24, 40, .08);
+      --shadow: 0 10px 28px rgba(16, 24, 40, .08);
+      --safe-bottom: env(safe-area-inset-bottom);
     }
 
     * { box-sizing: border-box; }
@@ -28,65 +33,61 @@
       font-family: Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
+      -webkit-font-smoothing: antialiased;
     }
 
     .hidden { display: none !important; }
 
     .login-page {
       min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1.05fr .95fr;
-      background: linear-gradient(135deg, #07824a, #155eef);
+      background: linear-gradient(160deg, #07824a 0%, #155eef 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .login-hero {
       color: white;
-      padding: 56px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      padding: 34px 22px 18px;
     }
 
     .login-hero h1 {
-      font-size: 46px;
-      margin: 0 0 14px;
-      line-height: 1.05;
+      font-size: 34px;
+      margin: 0 0 12px;
+      line-height: 1.08;
+      letter-spacing: -.02em;
     }
 
     .login-hero p {
-      font-size: 18px;
-      max-width: 620px;
-      line-height: 1.5;
+      font-size: 16px;
+      max-width: 520px;
+      line-height: 1.4;
       opacity: .92;
+      margin: 0;
     }
 
     .price-badge {
       display: inline-block;
-      width: fit-content;
-      margin-top: 20px;
-      padding: 14px 18px;
+      margin-top: 18px;
+      padding: 12px 16px;
       border-radius: 999px;
       background: rgba(255,255,255,.16);
       border: 1px solid rgba(255,255,255,.28);
       font-weight: 900;
-      font-size: 18px;
+      font-size: 15px;
     }
 
     .login-card-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 28px;
-      background: rgba(255,255,255,.12);
-      backdrop-filter: blur(8px);
+      padding: 0 14px 18px;
     }
 
     .login-card {
       width: 100%;
-      max-width: 470px;
+      max-width: 520px;
+      margin: 0 auto;
       background: white;
-      border-radius: 24px;
-      padding: 28px;
+      border-radius: 28px;
+      padding: 20px;
       box-shadow: 0 18px 55px rgba(0,0,0,.22);
     }
 
@@ -94,7 +95,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       background: #f2f4f7;
       padding: 6px;
       border-radius: 16px;
@@ -114,37 +115,38 @@
     }
 
     .login-card h2 {
-      margin: 0 0 8px;
-      font-size: 27px;
+      margin: 0 0 6px;
+      font-size: 24px;
     }
 
     .login-card p {
-      margin: 0 0 18px;
+      margin: 0 0 16px;
       color: var(--muted);
       line-height: 1.4;
+      font-size: 14px;
     }
 
     label {
       display: block;
       margin-bottom: 7px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       color: #344054;
     }
 
     input, select, textarea {
       width: 100%;
-      padding: 10px 12px;
+      padding: 12px 13px;
       border: 1px solid #d0d5dd;
-      border-radius: 12px;
-      font-size: 15px;
+      border-radius: 14px;
+      font-size: 16px;
       outline: none;
       background: #fff;
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    input, select { height: 46px; }
-    textarea { min-height: 78px; resize: vertical; }
+    input, select { height: 48px; }
+    textarea { min-height: 90px; resize: vertical; }
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--blue);
@@ -155,9 +157,9 @@
 
     button {
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 12px 16px;
-      min-height: 44px;
+      min-height: 46px;
       font-weight: 900;
       cursor: pointer;
       transition: .18s;
@@ -187,209 +189,135 @@
     .hint-box {
       background: #f8fafc;
       border: 1px solid #e4e7ec;
-      padding: 14px;
+      padding: 12px;
       border-radius: 14px;
-      margin-top: 16px;
+      margin-top: 14px;
       color: #475467;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.45;
     }
 
     .app {
-      display: grid;
-      grid-template-columns: 270px 1fr;
       min-height: 100vh;
+      background: var(--bg);
     }
 
     aside {
-      background: linear-gradient(180deg, #0f172a, #111827);
-      color: white;
-      padding: 22px 16px;
-      position: fixed;
-      width: 270px;
-      height: 100vh;
-      left: 0;
-      top: 0;
-      overflow-y: auto;
-    }
-
-    .brand {
-      padding: 8px 8px 20px;
-      border-bottom: 1px solid rgba(255,255,255,.12);
-      margin-bottom: 18px;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: 23px;
-      line-height: 1.2;
-    }
-
-    .brand p {
-      margin: 8px 0 0;
-      font-size: 13px;
-      color: rgba(255,255,255,.72);
-      line-height: 1.35;
-    }
-
-    .user-pill {
-      margin-top: 14px;
-      background: rgba(255,255,255,.08);
-      padding: 12px;
-      border-radius: 14px;
-      font-size: 14px;
-      line-height: 1.35;
-    }
-
-    nav {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .menu-btn {
-      width: 100%;
-      border: 0;
-      background: transparent;
-      color: rgba(255,255,255,.86);
-      font-size: 15px;
-      font-weight: 800;
-      padding: 13px 14px;
-      border-radius: 12px;
-      cursor: pointer;
-      text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .menu-btn:hover {
-      background: rgba(255,255,255,.08);
-      color: #fff;
-    }
-
-    .menu-btn.active {
-      background: #ffffff;
-      color: #111827;
-    }
-
-    .logout-btn {
-      margin-top: 18px;
-      width: 100%;
-      background: rgba(255,255,255,.12);
-      color: white;
-    }
-
-    .mobile-menu {
       display: none;
-      width: 100%;
-      padding: 13px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.25);
-      background: #fff;
-      color: #111827;
-      font-weight: 800;
-      margin-bottom: 10px;
     }
 
     main {
-      grid-column: 2;
-      padding: 28px;
       width: 100%;
+      padding: 0;
+      padding-bottom: 92px;
     }
 
     .content {
-      max-width: 1280px;
+      max-width: 760px;
       margin: 0 auto;
+      min-height: 100vh;
     }
 
     .hero {
+      position: sticky;
+      top: 0;
+      z-index: 20;
       background: linear-gradient(135deg, var(--green), var(--blue));
-      border-radius: 22px;
       color: white;
-      padding: 26px 30px;
-      margin-bottom: 22px;
-      box-shadow: 0 16px 34px rgba(21, 94, 239, .18);
+      padding: 18px 18px 16px;
+      border-radius: 0 0 26px 26px;
+      box-shadow: 0 12px 26px rgba(16, 24, 40, .14);
+    }
+
+    .hero::before {
+      content: "🏆 Bolão da Copa";
+      display: block;
+      font-weight: 900;
+      font-size: 13px;
+      opacity: .9;
+      margin-bottom: 8px;
     }
 
     .hero h2 {
       margin: 0;
-      font-size: 30px;
+      font-size: 24px;
+      line-height: 1.15;
+      letter-spacing: -.02em;
     }
 
     .hero p {
-      margin: 8px 0 0;
-      font-size: 16px;
-      opacity: .94;
+      margin: 5px 0 0;
+      font-size: 13px;
+      opacity: .88;
     }
 
-    .screen { display: none; }
-    .screen.active { display: block; }
+    .screen {
+      display: none;
+      padding: 16px;
+      animation: fadeIn .18s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 18px;
+      gap: 12px;
       align-items: start;
     }
 
     .card {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px;
+      border-radius: 22px;
+      padding: 16px;
       box-shadow: var(--shadow);
       min-width: 0;
     }
 
-    .span-3 { grid-column: span 3; }
-    .span-4 { grid-column: span 4; }
-    .span-5 { grid-column: span 5; }
-    .span-6 { grid-column: span 6; }
-    .span-7 { grid-column: span 7; }
-    .span-8 { grid-column: span 8; }
-    .span-12 { grid-column: span 12; }
+    .span-3, .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 {
+      grid-column: span 12;
+    }
 
     h3 {
-      margin: 0 0 18px;
-      font-size: 22px;
+      margin: 0 0 14px;
+      font-size: 19px;
+      letter-spacing: -.01em;
     }
 
-    .form-row {
+    .form-row, .form-row-3, .score-row {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .form-row-3 {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .score-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
-      max-width: 360px;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+      max-width: none;
     }
 
     .actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       margin-top: 10px;
     }
 
+    .actions button {
+      flex: 1 1 auto;
+    }
+
     .message {
       display: none;
-      margin-bottom: 18px;
-      padding: 13px 15px;
-      border-radius: 12px;
+      margin: 12px 16px 0;
+      padding: 12px 14px;
+      border-radius: 14px;
       font-weight: 800;
+      font-size: 13px;
     }
 
     .success {
@@ -406,53 +334,60 @@
 
     .muted {
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.35;
     }
 
     .stat-card {
-      min-height: 132px;
+      min-height: 108px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      grid-column: span 4;
+      padding: 14px;
     }
 
     .stat-number {
-      font-size: 38px;
+      font-size: 30px;
       font-weight: 900;
       color: var(--green);
       line-height: 1;
     }
 
     .stat-label {
-      margin-top: 8px;
+      margin-top: 7px;
       color: var(--muted);
       font-weight: 800;
+      font-size: 12px;
+      line-height: 1.2;
     }
 
     .list-card {
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
+      border-radius: 18px;
+      padding: 14px;
       background: #fcfcfd;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .list-title {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 12px;
+      align-items: flex-start;
+      gap: 10px;
       margin-bottom: 8px;
     }
 
-    .list-title strong { font-size: 16px; }
+    .list-title strong {
+      font-size: 15px;
+      line-height: 1.25;
+    }
 
     .pill {
       display: inline-block;
-      padding: 6px 10px;
+      padding: 5px 9px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
       white-space: nowrap;
     }
@@ -469,38 +404,40 @@
       background: #f9fafb;
       border: 1px dashed #d0d5dd;
       color: var(--muted);
-      border-radius: 16px;
-      padding: 22px;
+      border-radius: 18px;
+      padding: 18px;
       text-align: center;
-      font-size: 15px;
+      font-size: 14px;
+      line-height: 1.45;
     }
 
     .table-wrap {
       width: 100%;
       overflow-x: auto;
-      border-radius: 16px;
+      border-radius: 18px;
       border: 1px solid var(--border);
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      min-width: 760px;
+      min-width: 680px;
     }
 
     th, td {
-      padding: 14px 12px;
+      padding: 12px 10px;
       border-bottom: 1px solid #eaecf0;
       text-align: left;
-      font-size: 15px;
+      font-size: 13px;
       vertical-align: middle;
     }
 
     th {
       background: #f2f4f7;
       color: #344054;
-      font-size: 13px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .02em;
     }
@@ -509,145 +446,282 @@
 
     .ranking-position {
       font-weight: 900;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .two-columns {
       display: grid;
-      grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
-      gap: 18px;
+      grid-template-columns: 1fr;
+      gap: 12px;
       align-items: start;
     }
 
     .form-help {
-      margin-top: 14px;
-      padding: 14px;
+      margin-top: 12px;
+      padding: 12px;
       border-radius: 14px;
       background: #f8fafc;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.35;
     }
 
     .games-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-      gap: 14px;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
 
     .player-game {
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
+      border-radius: 22px;
+      padding: 16px;
       background: white;
       box-shadow: var(--shadow);
     }
 
     .player-game h4 {
-      margin: 0 0 8px;
-      font-size: 18px;
+      margin: 0 0 6px;
+      font-size: 17px;
     }
 
     .player-game .score-row {
       max-width: none;
+      grid-template-columns: 1fr 1fr;
     }
 
     .payment-box {
       display: grid;
-      grid-template-columns: 290px 1fr;
-      gap: 22px;
+      grid-template-columns: 1fr;
+      gap: 14px;
       align-items: start;
     }
 
     .qr-card {
       background: #fff;
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
+      border-radius: 22px;
+      padding: 16px;
       text-align: center;
     }
 
     .qr-card img {
-      width: 240px;
-      height: 240px;
+      width: 230px;
+      height: 230px;
       max-width: 100%;
-      border-radius: 12px;
+      border-radius: 14px;
       border: 1px solid var(--border);
       background: white;
     }
 
     .copy-code {
       width: 100%;
-      min-height: 120px;
-      font-size: 13px;
+      min-height: 110px;
+      font-size: 12px;
       color: #344054;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .highlight-pay {
-      padding: 16px;
-      border-radius: 16px;
+      padding: 14px;
+      border-radius: 18px;
       background: #ecfdf3;
       color: #027a48;
       border: 1px solid #abefc6;
       margin-bottom: 14px;
-      line-height: 1.45;
+      line-height: 1.4;
+      font-size: 14px;
     }
 
     .regulation-text {
       white-space: pre-wrap;
-      line-height: 1.65;
+      line-height: 1.6;
       background: #f8fafc;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
+      border-radius: 18px;
+      padding: 16px;
       color: #344054;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     .regulation-editor {
-      min-height: 360px;
+      min-height: 320px;
       line-height: 1.5;
     }
 
-    @media (max-width: 1050px) {
-      .login-page { grid-template-columns: 1fr; }
-      .login-hero { padding: 34px 24px; }
-      .login-hero h1 { font-size: 34px; }
-      .login-card-wrap { padding: 24px; }
-
-      .app { display: block; }
-      aside {
-        position: relative;
-        width: 100%;
-        height: auto;
-        border-radius: 0 0 22px 22px;
-      }
-
-      nav { display: none; }
-      .mobile-menu { display: block; }
-
-      main { padding: 18px; }
-      .content { max-width: 100%; }
-
-      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8 {
-        grid-column: span 12;
-      }
-
-      .two-columns, .payment-box { grid-template-columns: 1fr; }
+    .mobile-bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, .96);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      padding: 8px 8px calc(8px + var(--safe-bottom));
+      display: grid;
+      gap: 6px;
+      box-shadow: 0 -10px 28px rgba(16, 24, 40, .08);
     }
 
-    @media (max-width: 650px) {
-      .hero { padding: 22px; }
-      .hero h2 { font-size: 24px; }
+    .mobile-bottom-nav.admin {
+      grid-template-columns: repeat(5, 1fr);
+    }
 
-      .form-row, .form-row-3, .score-row {
-        grid-template-columns: 1fr;
-        max-width: none;
+    .mobile-bottom-nav.player {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .bottom-btn {
+      background: transparent;
+      color: #667085;
+      min-height: 54px;
+      border-radius: 16px;
+      padding: 6px 4px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+    }
+
+    .bottom-btn span {
+      font-size: 19px;
+      line-height: 1;
+    }
+
+    .bottom-btn.active {
+      background: #ecfdf3;
+      color: var(--green);
+    }
+
+    .more-sheet {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 84px;
+      z-index: 70;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: 0 18px 45px rgba(16,24,40,.22);
+      padding: 12px;
+      display: none;
+    }
+
+    .more-sheet.active {
+      display: block;
+    }
+
+    .more-sheet button {
+      width: 100%;
+      background: #f8fafc;
+      color: #101828;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    .more-sheet button:last-child {
+      margin-bottom: 0;
+    }
+
+    @media (min-width: 760px) {
+      .login-page {
+        display: grid;
+        grid-template-columns: 1.05fr .95fr;
       }
 
-      .card { padding: 18px; }
-      .games-grid { grid-template-columns: 1fr; }
+      .login-hero {
+        padding: 56px;
+        justify-content: center;
+      }
+
+      .login-card-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 270px 1fr;
+      }
+
+      aside {
+        display: block;
+        background: linear-gradient(180deg, #0f172a, #111827);
+        color: white;
+        padding: 22px 16px;
+        position: fixed;
+        width: 270px;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        overflow-y: auto;
+      }
+
+      main {
+        grid-column: 2;
+        padding: 24px;
+        padding-bottom: 24px;
+      }
+
+      .content {
+        max-width: 1180px;
+      }
+
+      .hero {
+        position: relative;
+        border-radius: 22px;
+      }
+
+      .screen {
+        padding: 0;
+      }
+
+      .mobile-bottom-nav, .more-sheet {
+        display: none !important;
+      }
+
+      .span-3 { grid-column: span 3; }
+      .span-4 { grid-column: span 4; }
+      .span-5 { grid-column: span 5; }
+      .span-6 { grid-column: span 6; }
+      .span-7 { grid-column: span 7; }
+      .span-8 { grid-column: span 8; }
+      .span-12 { grid-column: span 12; }
+
+      .form-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .form-row-3 {
+        grid-template-columns: 1.1fr 1fr 1fr;
+      }
+
+      .score-row {
+        grid-template-columns: 1fr 1fr;
+        max-width: 360px;
+      }
+
+      .two-columns {
+        grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      }
+
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      }
+
+      .payment-box {
+        grid-template-columns: 290px 1fr;
+      }
+
+      table {
+        min-width: 760px;
+      }
     }
   </style>
 </head>
@@ -656,10 +730,8 @@
   <section id="loginPage" class="login-page">
     <div class="login-hero">
       <h1>🏆 Bolão da Copa Online</h1>
-      <p>
-        Versão conectada ao Supabase. Os dados ficam salvos no banco online, não mais apenas no navegador.
-      </p>
-      <div class="price-badge">Palpite primeiro, Pix depois</div>
+      <p>Entre, registre seu palpite e pague via Pix.</p>
+      <div class="price-badge">Bolão da Copa</div>
     </div>
 
     <div class="login-card-wrap">
@@ -671,7 +743,7 @@
 
         <div id="loginForm">
           <h2>Entrar</h2>
-          <p>Acesse como administrador ou jogador cadastrado.</p>
+          <p>Acesse sua conta.</p>
 
           <div class="field">
             <label for="loginUser">Usuário</label>
@@ -686,15 +758,13 @@
           <button class="btn-primary btn-full" onclick="login()">Entrar</button>
 
           <div class="hint-box">
-            <strong>Acesso inicial:</strong><br>
-            Usuário: <strong>admin</strong><br>
-            Senha: <strong>1234</strong>
+            <strong>Admin inicial:</strong> admin / 1234
           </div>
         </div>
 
         <div id="registerForm" class="hidden">
           <h2>Cadastro do jogador</h2>
-          <p>Crie seu acesso. O pagamento será solicitado apenas depois do palpite.</p>
+          <p>Crie sua conta para participar.</p>
 
           <div class="field">
             <label for="regName">Nome completo</label>
@@ -719,7 +789,7 @@
           <button class="btn-blue btn-full" onclick="registerPlayer()">Cadastrar jogador</button>
 
           <div class="hint-box">
-            Depois do cadastro, entre no sistema, faça o palpite e depois pague via QR Code Pix.
+            O pagamento será feito após registrar o palpite.
           </div>
         </div>
       </div>
@@ -730,7 +800,7 @@
     <aside>
       <div class="brand">
         <h1>🏆 Bolão da Copa</h1>
-        <p>Dados salvos no Supabase.</p>
+        <p>Bolão online</p>
         <div class="user-pill">
           <strong id="currentUserName">Usuário</strong><br>
           <span id="currentUserRole" class="pill admin">Admin</span>
@@ -795,7 +865,7 @@
         <section id="admin_payments" class="screen">
           <div class="card">
             <h3>Pagamentos Pix</h3>
-            <p class="muted">Aprove o pagamento para validar o jogador no ranking.</p>
+            
             <div id="paymentsList"></div>
           </div>
         </section>
@@ -824,7 +894,7 @@
 
           <div class="card">
             <h3>Jogos cadastrados</h3>
-            <p class="muted">Todos os jogos abertos aparecem automaticamente para os jogadores.</p>
+            
             <div id="gamesList"></div>
           </div>
         </section>
@@ -852,9 +922,7 @@
 
               <button class="btn-blue" onclick="saveResult()">Salvar resultado</button>
 
-              <div class="form-help">
-                Ao salvar o resultado, o ranking é recalculado automaticamente.
-              </div>
+              
             </div>
 
             <div class="card">
@@ -895,7 +963,7 @@
         <section id="admin_regulation" class="screen">
           <div class="card">
             <h3>Editar regulamento</h3>
-            <p class="muted">O texto abaixo será exibido para os jogadores.</p>
+            
             <div class="field">
               <label for="adminRegulationText">Regulamento</label>
               <textarea id="adminRegulationText" class="regulation-editor"></textarea>
@@ -924,13 +992,10 @@
             </div>
 
             <div class="card span-6">
-              <h3>Regras</h3>
-              <p><strong>Valor:</strong> R$ 10,00 por jogador.</p>
-              <p><strong>Fluxo:</strong> jogador cadastra, faz palpite, paga via QR Code e aguarda aprovação.</p>
-              <p><strong>Resultados:</strong> o administrador lança manualmente o placar final dos jogos.</p>
+              <h3>Pontuação</h3>
               <p><strong>Placar exato:</strong> 5 pontos.</p>
-              <p><strong>Vencedor ou empate correto:</strong> 3 pontos.</p>
-              <p><strong>Gols corretos de um dos times:</strong> 1 ponto.</p>
+              <p><strong>Vencedor/empate:</strong> 3 pontos.</p>
+              <p><strong>Gol correto:</strong> 1 ponto.</p>
             </div>
           </div>
         </section>
@@ -960,7 +1025,7 @@
         <section id="player_bets" class="screen">
           <div class="card">
             <h3>Registrar meus palpites</h3>
-            <p class="muted">Escolha o jogo, registre seu palpite e depois faça o pagamento via Pix.</p>
+            
             <div id="playerBetGames"></div>
           </div>
         </section>
@@ -982,7 +1047,7 @@
         <section id="player_regulation" class="screen">
           <div class="card">
             <h3>Regulamento do Bolão</h3>
-            <p class="muted">Leia com atenção antes de registrar seus palpites.</p>
+            
             <div id="playerRegulationText" class="regulation-text"></div>
           </div>
         </section>
@@ -1009,6 +1074,9 @@
         </section>
       </div>
     </main>
+      <div id="moreSheet" class="more-sheet"></div>
+      <div id="mobileBottomNav" class="mobile-bottom-nav player"></div>
+
   </section>
 
   <script>
@@ -1029,24 +1097,24 @@
     };
 
     const adminScreens = {
-      admin_dashboard: ["Dashboard do Admin", "Controle geral do bolão."],
-      admin_players: ["Jogadores", "Veja todos os jogadores cadastrados."],
-      admin_payments: ["Pagamentos Pix", "Aprove pagamentos gerados após o palpite."],
-      admin_games: ["Jogos", "Cadastre os confrontos da Copa."],
-      admin_results: ["Resultados", "Lance manualmente o placar real dos jogos."],
-      admin_guesses: ["Palpites", "Visualize todos os palpites enviados."],
-      admin_ranking: ["Ranking", "Veja a classificação geral."],
-      admin_regulation: ["Regulamento", "Edite as regras que os jogadores irão visualizar."],
-      admin_settings: ["Configurações", "Configure Pix, regras e administração."]
+      admin_dashboard: ["Dashboard", "Resumo do bolão."],
+      admin_players: ["Jogadores", "Participantes cadastrados."],
+      admin_payments: ["Pagamentos", "Aprove ou rejeite pagamentos."],
+      admin_games: ["Jogos", "Cadastre os jogos."],
+      admin_results: ["Resultados", "Informe o placar final."],
+      admin_guesses: ["Palpites", "Palpites registrados."],
+      admin_ranking: ["Ranking", "Classificação geral."],
+      admin_regulation: ["Regulamento", "Regras do bolão."],
+      admin_settings: ["Configurações", "Pix e regras."]
     };
 
     const playerScreens = {
-      player_home: ["Área do Jogador", "Veja sua pontuação e seus próximos palpites."],
-      player_bets: ["Registrar Palpites", "Escolha o jogo, grave o palpite e faça o pagamento."],
-      player_payment: ["Pagamento Pix", "Faça o Pix pelo QR Code gerado."],
-      player_my_guesses: ["Histórico de Palpites", "Acompanhe seus palpites e situação do pagamento."],
-      player_regulation: ["Regulamento", "Leia as regras do bolão antes de participar."],
-      player_ranking: ["Ranking", "Veja sua posição no bolão."]
+      player_home: ["Início", "Resumo da sua participação."],
+      player_bets: ["Palpites", "Registre seus placares."],
+      player_payment: ["Pagamento", "Pague via Pix."],
+      player_my_guesses: ["Meus Palpites", "Seus palpites registrados."],
+      player_regulation: ["Regulamento", "Regras do bolão."],
+      player_ranking: ["Ranking", "Classificação geral."]
     };
 
     function showMsg(text, type = "success") {
@@ -1227,37 +1295,66 @@
     function buildMenu() {
       const menu = document.getElementById("sideMenu");
       const mobile = document.getElementById("mobileMenu");
+      const bottom = document.getElementById("mobileBottomNav");
+      const sheet = document.getElementById("moreSheet");
 
       let items = [];
 
       if (currentUser.tipo === "admin") {
         items = [
-          ["admin_dashboard", "📊 Dashboard"],
-          ["admin_players", "👤 Jogadores"],
-          ["admin_payments", "💸 Pagamentos Pix"],
-          ["admin_games", "⚽ Jogos"],
-          ["admin_results", "✅ Resultados"],
-          ["admin_guesses", "📝 Palpites"],
-          ["admin_ranking", "🏅 Ranking"],
-          ["admin_regulation", "📜 Regulamento"],
-          ["admin_settings", "⚙️ Configurações"]
+          ["admin_dashboard", "📊", "Início"],
+          ["admin_players", "👤", "Jogadores"],
+          ["admin_payments", "💸", "Pagamentos"],
+          ["admin_games", "⚽", "Jogos"],
+          ["admin_results", "✅", "Resultados"],
+          ["admin_guesses", "📝", "Palpites"],
+          ["admin_ranking", "🏅", "Ranking"],
+          ["admin_regulation", "📜", "Regras"],
+          ["admin_settings", "⚙️", "Config."]
         ];
       } else {
         items = [
-          ["player_home", "🏠 Início"],
-          ["player_bets", "📝 Registrar palpites"],
-          ["player_payment", "💸 Pagamento Pix"],
-          ["player_my_guesses", "📋 Meus palpites"],
-          ["player_regulation", "📜 Regulamento"],
-          ["player_ranking", "🏅 Ranking"]
+          ["player_home", "🏠", "Início"],
+          ["player_bets", "📝", "Palpites"],
+          ["player_payment", "💸", "Pix"],
+          ["player_my_guesses", "📋", "Meus"],
+          ["player_ranking", "🏅", "Ranking"],
+          ["player_regulation", "📜", "Regras"]
         ];
       }
 
       menu.innerHTML = items.map(item => `
-        <button class="menu-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">${item[1]}</button>
+        <button class="menu-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">${item[1]} ${item[2]}</button>
       `).join("");
 
-      mobile.innerHTML = items.map(item => `<option value="${item[0]}">${item[1]}</option>`).join("");
+      mobile.innerHTML = items.map(item => `<option value="${item[0]}">${item[1]} ${item[2]}</option>`).join("");
+
+      const mainItems = currentUser.tipo === "admin" ? items.slice(0, 4) : items.slice(0, 4);
+      const extraItems = currentUser.tipo === "admin" ? items.slice(4) : items.slice(4);
+
+      bottom.className = "mobile-bottom-nav " + (currentUser.tipo === "admin" ? "admin" : "player");
+
+      bottom.innerHTML = mainItems.map(item => `
+        <button class="bottom-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">
+          <span>${item[1]}</span>${item[2]}
+        </button>
+      `).join("") + `
+        <button class="bottom-btn" id="moreButton" onclick="toggleMoreSheet()">
+          <span>☰</span>Mais
+        </button>
+      `;
+
+      sheet.innerHTML = extraItems.map(item => `
+        <button onclick="goToScreen('${item[0]}'); closeMoreSheet();">${item[1]} ${item[2]}</button>
+      `).join("") + `<button onclick="logout()">🚪 Sair</button>`;
+    }
+
+    function toggleMoreSheet() {
+      document.getElementById("moreSheet").classList.toggle("active");
+    }
+
+    function closeMoreSheet() {
+      document.getElementById("moreSheet").classList.remove("active");
     }
 
     function goToScreen(screen) {
@@ -1267,6 +1364,12 @@
       document.querySelectorAll(".menu-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.screen === screen);
       });
+
+      document.querySelectorAll(".bottom-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.screen === screen);
+      });
+
+      closeMoreSheet();
 
       document.getElementById("mobileMenu").value = screen;
 
@@ -2008,15 +2111,14 @@
 
       box.innerHTML = `
         <div class="highlight-pay">
-          <strong>Palpite registrado com sucesso.</strong><br>
-          Agora faça o Pix de <strong>R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</strong>.
-          Depois, aguarde o administrador aprovar o pagamento.
+          <strong>Pagamento pendente.</strong><br>
+          Faça o Pix de <strong>R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</strong>.
         </div>
 
         <div class="payment-box">
           <div class="qr-card">
             <img src="${qrUrl}" alt="QR Code Pix">
-            <p class="muted">Escaneie o QR Code no aplicativo do seu banco.</p>
+            <p class="muted">Escaneie para pagar.</p>
             ${paymentStatusLabel(payment.status)}
           </div>
 
