@@ -1,0 +1,3 @@
+Tem Placar Exato: True
+Tem Resultado Correto: False
+Tem Acertos: True

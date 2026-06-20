@@ -1,0 +1,7 @@
+pagamento_desativado: True
+const_regulamento_novo: True
+sql_regulamento_criado: True
+pontuacao_automatica: True
+confirmar_senha: True
+recuperar_senha: True
+sem_qrcode_pix_regulamento: True

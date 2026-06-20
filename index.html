@@ -938,13 +938,18 @@
 
           <div class="field">
             <label for="regPass">Senha</label>
-            <input id="regPass" type="password" placeholder="Crie uma senha" />
+            <input id="regPass" type="password" minlength="6" placeholder="Crie uma senha" />
+          </div>
+
+          <div class="field">
+            <label for="regPassConfirm">Confirmar senha</label>
+            <input id="regPassConfirm" type="password" minlength="6" placeholder="Digite a senha novamente" />
           </div>
 
           <button class="btn-blue btn-full" onclick="registerPlayer()">Cadastrar jogador</button>
 
           <div class="hint-box">
-            O pagamento será feito após registrar o palpite.
+            Fase de teste: não precisa pagamento. Cadastre-se e registre seus palpites.
           </div>
         </div>
       </div>
@@ -1117,8 +1122,7 @@
                     <th>Jogador</th>
                     <th>Pontos</th>
                     <th>Palpites</th>
-                    <th>Placar exato</th>
-                    <th>Resultado correto</th>
+                    <th>Acertos</th>
                   </tr>
                 </thead>
                 <tbody id="rankingBodyAdmin"></tbody>
@@ -1230,8 +1234,7 @@
                     <th>Jogador</th>
                     <th>Pontos</th>
                     <th>Palpites</th>
-                    <th>Placar exato</th>
-                    <th>Resultado correto</th>
+                    <th>Acertos</th>
                   </tr>
                 </thead>
                 <tbody id="rankingBodyPlayer"></tbody>
@@ -1260,8 +1263,35 @@
     });
 
     const PRICE = 10;
-    const PAYMENT_REQUIRED = false; // Fase de teste: pagamento/Teste desativado
+    const PAYMENT_REQUIRED = false; // Fase de teste: pagamento/Pix desativado
     const SESSION_KEY = "bolao_copa_supabase_session";
+    const DEFAULT_REGULATION = `REGULAMENTO DO BOLÃO DA COPA — FASE DE TESTE
+
+1. O jogador deve se cadastrar no sistema para participar do bolão.
+
+2. O jogador deve registrar seus palpites antes do início de cada partida.
+
+3. Nesta fase de teste, não haverá cobrança de pagamento para participar.
+
+4. Os palpites confirmados entram automaticamente no ranking, sem necessidade de aprovação de pagamento.
+
+5. Após o início da partida, o palpite não poderá mais ser registrado ou alterado.
+
+6. A pontuação será calculada automaticamente pelo sistema depois que o administrador lançar o placar final da partida.
+
+7. O placar exato vale 5 pontos.
+
+8. Acertar o vencedor ou o empate vale 3 pontos.
+
+9. Acertar a quantidade de gols de um dos times vale 1 ponto.
+
+10. O administrador lançará manualmente os resultados das partidas no sistema.
+
+11. O ranking será atualizado automaticamente após os resultados serem lançados.
+
+12. Em caso de empate na pontuação, ficará melhor colocado o jogador com maior número de acertos.
+
+13. Esta versão é apenas para teste. As regras de pagamento poderão ser ativadas futuramente.`;
 
     let currentUser = null;
     let db = {
@@ -1356,7 +1386,7 @@
         nome_recebedor: "ADMINISTRADOR BOLAO",
         cidade_recebedor: "SAO PAULO",
         valor_participacao: 10,
-        regulamento: "Regulamento ainda não cadastrado."
+        regulamento: DEFAULT_REGULATION
       };
     }
 
@@ -1365,9 +1395,10 @@
       const telefone = document.getElementById("regPhone").value.trim();
       const email = document.getElementById("regUser").value.trim().toLowerCase();
       const senha = document.getElementById("regPass").value.trim();
+      const senhaConfirm = document.getElementById("regPassConfirm").value.trim();
 
-      if (!nome || !telefone || !email || !senha) {
-        alert("Preencha nome, telefone, e-mail e senha.");
+      if (!nome || !telefone || !email || !senha || !senhaConfirm) {
+        alert("Preencha nome, telefone, e-mail, senha e confirmação de senha.");
         return;
       }
 
@@ -1378,6 +1409,11 @@
 
       if (senha.length < 6) {
         alert("A senha precisa ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      if (senha !== senhaConfirm) {
+        alert("As senhas não conferem.");
         return;
       }
 
@@ -1401,9 +1437,33 @@
       document.getElementById("regPhone").value = "";
       document.getElementById("regUser").value = "";
       document.getElementById("regPass").value = "";
+      document.getElementById("regPassConfirm").value = "";
 
       alert("Cadastro realizado. Agora entre com seu e-mail e senha.");
       showLoginTab("login");
+    }
+
+    async function recoverPassword() {
+      const emailInput = document.getElementById("loginUser").value.trim().toLowerCase();
+      const email = emailInput || prompt("Digite seu e-mail cadastrado:");
+
+      if (!email) return;
+
+      if (!email.includes("@")) {
+        alert("Informe um e-mail válido para recuperar a senha.");
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.href
+      });
+
+      if (error) {
+        alert("Não foi possível enviar a recuperação agora: " + error.message);
+        return;
+      }
+
+      alert("Enviamos um link de recuperação para seu e-mail. Verifique sua caixa de entrada e spam.");
     }
 
     async function login() {
@@ -1726,31 +1786,33 @@
     }
 
     function calculateGuessPoints(guess, game) {
-      if (!game || game.status !== "finalizado") {
+      // A pontuação só aparece depois que o administrador lança o placar final.
+      if (!game || game.status !== "finalizado" || game.resultado_a === null || game.resultado_b === null || game.resultado_a === undefined || game.resultado_b === undefined) {
         return { points: 0, exact: false, resultCorrect: false };
       }
 
-      const exact = guess.palpite_a === game.resultado_a && guess.palpite_b === game.resultado_b;
-      const resultCorrect = resultType(guess.palpite_a, guess.palpite_b) === resultType(game.resultado_a, game.resultado_b);
+      const exact = Number(guess.palpite_a) === Number(game.resultado_a) && Number(guess.palpite_b) === Number(game.resultado_b);
+      const resultCorrect = resultType(Number(guess.palpite_a), Number(guess.palpite_b)) === resultType(Number(game.resultado_a), Number(game.resultado_b));
 
       let points = 0;
 
       if (exact) {
-        points += 5;
+        points = 5;
       } else {
         if (resultCorrect) points += 3;
-        if (guess.palpite_a === game.resultado_a) points += 1;
-        if (guess.palpite_b === game.resultado_b) points += 1;
+        if (Number(guess.palpite_a) === Number(game.resultado_a)) points += 1;
+        if (Number(guess.palpite_b) === Number(game.resultado_b)) points += 1;
       }
 
       return { points, exact, resultCorrect };
     }
 
     function buildRanking() {
-      const players = db.usuarios.filter(u => u.tipo === "jogador" && isUserApproved(u.id));
+      const players = db.usuarios.filter(u => u.tipo === "jogador");
 
       return players.map(player => {
         const playerGuesses = db.palpites.filter(g => g.usuario_id === player.id);
+
         let points = 0;
         let exacts = 0;
         let resultHits = 0;
@@ -1770,10 +1832,12 @@
           points,
           guesses: playerGuesses.length,
           exacts,
+          acertos: resultHits,
           resultHits
         };
       }).sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
+        if (b.acertos !== a.acertos) return b.acertos - a.acertos;
         if (b.exacts !== a.exacts) return b.exacts - a.exacts;
         return a.name.localeCompare(b.name);
       });
@@ -2375,7 +2439,7 @@
       if (old) old.remove();
 
       if (ranking.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#667085;">Nenhum jogador aprovado no ranking.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#667085;">Nenhum jogador no ranking ainda.</td></tr>`;
         return;
       }
 
@@ -2396,8 +2460,7 @@
           <td>${index === 0 ? "🥇 " : ""}${item.name}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
           <td><strong>${item.points}</strong></td>
           <td>${item.guesses}</td>
-          <td>${item.exacts}</td>
-          <td>${item.resultHits}</td>
+          <td>${item.acertos ?? item.exacts ?? 0}</td>
         </tr>
       `).join("");
     }
@@ -2765,7 +2828,7 @@
     function renderRegulation() {
       const adminText = document.getElementById("adminRegulationText");
       const playerText = document.getElementById("playerRegulationText");
-      const text = db.configuracoes && db.configuracoes.regulamento ? db.configuracoes.regulamento : "Regulamento ainda não cadastrado.";
+      const text = db.configuracoes && db.configuracoes.regulamento ? db.configuracoes.regulamento : DEFAULT_REGULATION;
 
       if (adminText) adminText.value = text;
       if (playerText) playerText.textContent = text;
