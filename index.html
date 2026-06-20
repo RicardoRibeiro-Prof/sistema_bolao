@@ -1235,6 +1235,8 @@
   </section>
 
   <script>
+    /* SUPABASE_KEY é pública/publishable e pode aparecer no front-end.
+       Nunca usar service_role, secret key ou senha do banco neste arquivo. */
     const SUPABASE_URL = "https://npsirjhnmmmbegxtfnxp.supabase.co";
     const SUPABASE_KEY = "sb_publishable_VRdDWnOZx3TCERRQX3TPBA_Befz_uEl";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1272,6 +1274,15 @@
       player_ranking: ["Ranking", "Classificação geral."]
     };
 
+    function escHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
     function showMsg(text, type = "success") {
       const msg = document.getElementById("msg");
       msg.textContent = text || "";
@@ -1301,7 +1312,7 @@
 
     async function fetchAllData() {
       const [usuarios, jogos, palpites, pagamentos, configuracoes] = await Promise.all([
-        supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: true }),
+        supabaseClient.from("usuarios").select("id,nome,telefone,usuario,tipo,criado_em").order("criado_em", { ascending: true }),
         supabaseClient.from("jogos").select("*").order("data_hora", { ascending: true }),
         supabaseClient.from("palpites").select("*").order("criado_em", { ascending: true }),
         supabaseClient.from("pagamentos").select("*").order("criado_em", { ascending: true }),
@@ -1349,27 +1360,21 @@
         return;
       }
 
-      const exists = await supabaseClient
-        .from("usuarios")
-        .select("id")
-        .eq("usuario", usuario)
-        .maybeSingle();
-
-      if (exists.data) {
-        alert("Esse usuário já existe. Escolha outro.");
+      if (senha.length < 6) {
+        alert("A senha precisa ter pelo menos 6 caracteres.");
         return;
       }
 
-      const { error } = await supabaseClient.from("usuarios").insert({
-        nome,
-        telefone,
-        usuario,
-        senha,
-        tipo: "jogador"
+      const { data, error } = await supabaseClient.rpc("cadastrar_jogador", {
+        p_nome: nome,
+        p_telefone: telefone,
+        p_usuario: usuario,
+        p_senha: senha
       });
 
       if (error) {
-        alert("Erro ao cadastrar: " + error.message);
+        alert("Erro ao cadastrar. O usuário pode já existir ou o SQL de segurança ainda não foi executado.");
+        console.error(error);
         return;
       }
 
@@ -1378,7 +1383,7 @@
       document.getElementById("regUser").value = "";
       document.getElementById("regPass").value = "";
 
-      alert("Cadastro realizado! Agora entre, registre seu palpite e depois faça o Pix pelo QR Code.");
+      alert("Cadastro realizado! Agora entre, registre seus palpites e depois faça o Pix.");
       showLoginTab("login");
     }
 
@@ -1391,25 +1396,26 @@
         return;
       }
 
-      const { data, error } = await supabaseClient
-        .from("usuarios")
-        .select("*")
-        .eq("usuario", usuario)
-        .eq("senha", senha)
-        .maybeSingle();
+      const { data, error } = await supabaseClient.rpc("login_usuario", {
+        p_usuario: usuario,
+        p_senha: senha
+      });
 
       if (error) {
-        alert("Erro ao entrar: " + error.message);
+        alert("Erro ao entrar. Verifique se o SQL de segurança foi executado no Supabase.");
+        console.error(error);
         return;
       }
 
-      if (!data) {
+      const user = Array.isArray(data) ? data[0] : data;
+
+      if (!user) {
         alert("Usuário ou senha inválidos.");
         return;
       }
 
-      currentUser = data;
-      sessionStorage.setItem(SESSION_KEY, data.id);
+      currentUser = user;
+      sessionStorage.setItem(SESSION_KEY, user.id);
 
       document.getElementById("loginUser").value = "";
       document.getElementById("loginPass").value = "";
@@ -1429,7 +1435,7 @@
       const userId = sessionStorage.getItem(SESSION_KEY);
       if (!userId) return;
 
-      const { data, error } = await supabaseClient.from("usuarios").select("*").eq("id", userId).maybeSingle();
+      const { data, error } = await supabaseClient.from("usuarios").select("id,nome,telefone,usuario,tipo,criado_em").eq("id", userId).maybeSingle();
       if (!error && data) {
         currentUser = data;
         await openApp();
@@ -2124,7 +2130,7 @@
         leaderBox.innerHTML = `
           <div class="list-card">
             <div class="list-title">
-              <strong>🥇 ${leader.name}</strong>
+              <strong>🥇 ${escHtml(leader.name)}</strong>
               <span class="pill finished">${leader.points} pontos</span>
             </div>
             <p class="muted">${leader.guesses} palpites | ${leader.exacts} placares exatos</p>
@@ -2137,7 +2143,7 @@
         ? openGames.map(g => `
           <div class="list-card">
             <div class="list-title">
-              <strong>${g.time_a} x ${g.time_b}</strong>
+              <strong>${escHtml(g.time_a)} x ${escHtml(g.time_b)}</strong>
               <span class="pill open">Aberto</span>
             </div>
             <p class="muted">${formatDate(g.data_hora)}</p>
@@ -2169,9 +2175,9 @@
           <tbody>
             ${players.map(player => `
               <tr>
-                <td><strong>${player.nome}</strong></td>
-                <td>${player.usuario}</td>
-                <td>${player.telefone || "-"}</td>
+                <td><strong>${escHtml(player.nome)}</strong></td>
+                <td>${escHtml(player.usuario)}</td>
+                <td>${escHtml(player.telefone || "-")}</td>
                 <td>${paymentStatusLabel(getUserPaymentStatus(player.id))}</td>
                 <td><button class="btn-danger" onclick="deletePlayer('${player.id}')">Excluir</button></td>
               </tr>
@@ -2231,7 +2237,7 @@
           .map(game => `
             <div class="list-card">
               <div class="list-title">
-                <strong>${game.time_a} x ${game.time_b}</strong>
+                <strong>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</strong>
                 <span class="pill ${game.status === "finalizado" ? "finished" : "open"}">${game.status === "finalizado" ? "Finalizado" : "Aberto"}</span>
               </div>
               <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
@@ -2246,7 +2252,7 @@
       }
 
       const resultOptions = `<option value="">Selecione o jogo</option>` + db.jogos
-        .map(g => `<option value="${g.id}">${formatDate(g.data_hora)} - ${g.time_a} x ${g.time_b} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
+        .map(g => `<option value="${g.id}">${formatDate(g.data_hora)} - ${escHtml(g.time_a)} x ${escHtml(g.time_b)} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
         .join("");
 
       document.getElementById("resultGame").innerHTML = resultOptions;
@@ -2264,7 +2270,7 @@
       box.innerHTML = finished.map(game => `
         <div class="list-card">
           <div class="list-title">
-            <strong>${game.time_a} ${game.resultado_a} x ${game.resultado_b} ${game.time_b}</strong>
+            <strong>${escHtml(game.time_a)} ${game.resultado_a} x ${game.resultado_b} ${escHtml(game.time_b)}</strong>
             <span class="pill finished">Finalizado</span>
           </div>
           <p class="muted">${formatDate(game.data_hora)}</p>
@@ -2304,8 +2310,8 @@
 
               return `
                 <tr>
-                  <td><strong>${player.nome}</strong></td>
-                  <td>${game.time_a} x ${game.time_b}</td>
+                  <td><strong>${escHtml(player.nome)}</strong></td>
+                  <td>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</td>
                   <td>${guess.palpite_a} x ${guess.palpite_b}</td>
                   <td>${game.status === "finalizado" ? game.resultado_a + " x " + game.resultado_b : "-"}</td>
                   <td>${paymentStatusLabel(payStatus)}</td>
@@ -2345,7 +2351,7 @@
       tbody.innerHTML = ranking.map((item, index) => `
         <tr class="${index === 0 ? "top1" : ""} ${currentUser && item.userId === currentUser.id ? "me-row" : ""}">
           <td class="ranking-position">${index + 1}º</td>
-          <td>${index === 0 ? "🥇 " : ""}${item.name}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
+          <td>${index === 0 ? "🥇 " : ""}${escHtml(item.name)}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
           <td><strong>${item.points}</strong></td>
           <td>${item.guesses}</td>
           <td>${item.exacts}</td>
@@ -2448,7 +2454,7 @@
                 return `
                   <div class="player-game">
                     <div class="list-title">
-                      <h4>${game.time_a} x ${game.time_b}</h4>
+                      <h4>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</h4>
                       <span class="pill ${guess ? "finished" : "open"}">${guess ? "Preenchido" : "Pendente"}</span>
                     </div>
                     <p class="muted">${formatDate(game.data_hora)}</p>
@@ -2456,11 +2462,11 @@
 
                     <div class="score-row">
                       <div>
-                        <label>${game.time_a}</label>
+                        <label>${escHtml(game.time_a)}</label>
                         <input id="guessA_${game.id}" type="number" min="0" value="${guess ? guess.palpite_a : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
                       </div>
                       <div>
-                        <label>${game.time_b}</label>
+                        <label>${escHtml(game.time_b)}</label>
                         <input id="guessB_${game.id}" type="number" min="0" value="${guess ? guess.palpite_b : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
                       </div>
                     </div>
@@ -2491,7 +2497,7 @@
             const guess = db.palpites.find(p => p.usuario_id === currentUser.id && p.jogo_id === game.id);
             return `
               <div class="review-item">
-                <strong>${game.time_a} x ${game.time_b}</strong>
+                <strong>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</strong>
                 <span class="review-score">${guess ? guess.palpite_a + " x " + guess.palpite_b : "Falta"}</span>
               </div>
             `;
@@ -2709,7 +2715,7 @@
 
                 return `
                   <tr>
-                    <td><strong>${game.time_a} x ${game.time_b}</strong></td>
+                    <td><strong>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</strong></td>
                     <td>${formatDate(game.data_hora)}</td>
                     <td>${guess.palpite_a} x ${guess.palpite_b}</td>
                     <td>${game.status === "finalizado" ? game.resultado_a + " x " + game.resultado_b : "Aguardando"}</td>
