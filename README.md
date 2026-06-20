@@ -1,19 +1,23 @@
-# Bolão da Copa Online - Experiência do Jogador
+# Bolão da Copa - PWA pronto para APK
 
-Melhorias implementadas:
+Esta versão está preparada para virar app Android.
 
-- Bolão por rodada
-- Pagamento só depois de preencher todos os palpites da rodada
-- Barra de progresso da rodada
-- Prazo para palpites
-- Revisão dos palpites antes do Pix
-- Ranking com destaque para o jogador logado
-- Tela inicial mostrando o status da rodada
+## Arquivos
 
-## Antes de publicar
+- `index.html`
+- `manifest.json`
+- `service-worker.js`
+- `icons/`
+- `.nojekyll`
+- `COMO-GERAR-APK.txt`
 
-Rode no Supabase o arquivo:
+## Como publicar
 
-ATUALIZAR-SUPABASE-EXPERIENCIA.sql
+Suba tudo no GitHub Pages.
 
-Depois envie os arquivos para o GitHub Pages.
+Depois use o link do GitHub Pages em um gerador de APK para PWA, como PWABuilder.
+
+## Importante
+
+Este app usa Supabase Auth + RLS.  
+Antes de testar, o banco precisa estar configurado corretamente.
