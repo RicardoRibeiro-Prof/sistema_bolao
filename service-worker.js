@@ -1,4 +1,4 @@
-const CACHE_NAME = "bolao-regulamento-pontuacao-v10";
+const CACHE_NAME = "bolao-ranking-detalhado-v12";
 const APP_FILES = [
   "./",
   "./index.html",

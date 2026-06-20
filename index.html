@@ -1114,6 +1114,7 @@
         <section id="admin_ranking" class="screen">
           <div class="card">
             <h3>Ranking geral</h3>
+            <p class="muted" style="margin-bottom:12px;">Detalhamento por categoria: placares exatos, vencedor/empate e gols certos.</p>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -1122,7 +1123,9 @@
                     <th>Jogador</th>
                     <th>Pontos</th>
                     <th>Palpites</th>
-                    <th>Acertos</th>
+                    <th>Placares exatos</th>
+                    <th>Vencedor/empate</th>
+                    <th>Gols certos</th>
                   </tr>
                 </thead>
                 <tbody id="rankingBodyAdmin"></tbody>
@@ -1226,6 +1229,7 @@
         <section id="player_ranking" class="screen">
           <div class="card">
             <h3>Ranking geral</h3>
+            <p class="muted" style="margin-bottom:12px;">Detalhamento por categoria: placares exatos, vencedor/empate e gols certos.</p>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -1234,7 +1238,9 @@
                     <th>Jogador</th>
                     <th>Pontos</th>
                     <th>Palpites</th>
-                    <th>Acertos</th>
+                    <th>Placares exatos</th>
+                    <th>Vencedor/empate</th>
+                    <th>Gols certos</th>
                   </tr>
                 </thead>
                 <tbody id="rankingBodyPlayer"></tbody>
@@ -1395,10 +1401,9 @@
       const telefone = document.getElementById("regPhone").value.trim();
       const email = document.getElementById("regUser").value.trim().toLowerCase();
       const senha = document.getElementById("regPass").value.trim();
-      const senhaConfirm = document.getElementById("regPassConfirm").value.trim();
 
-      if (!nome || !telefone || !email || !senha || !senhaConfirm) {
-        alert("Preencha nome, telefone, e-mail, senha e confirmação de senha.");
+      if (!nome || !telefone || !email || !senha) {
+        alert("Preencha nome, telefone, e-mail e senha.");
         return;
       }
 
@@ -1409,11 +1414,6 @@
 
       if (senha.length < 6) {
         alert("A senha precisa ter pelo menos 6 caracteres.");
-        return;
-      }
-
-      if (senha !== senhaConfirm) {
-        alert("As senhas não conferem.");
         return;
       }
 
@@ -1437,33 +1437,9 @@
       document.getElementById("regPhone").value = "";
       document.getElementById("regUser").value = "";
       document.getElementById("regPass").value = "";
-      document.getElementById("regPassConfirm").value = "";
 
       alert("Cadastro realizado. Agora entre com seu e-mail e senha.");
       showLoginTab("login");
-    }
-
-    async function recoverPassword() {
-      const emailInput = document.getElementById("loginUser").value.trim().toLowerCase();
-      const email = emailInput || prompt("Digite seu e-mail cadastrado:");
-
-      if (!email) return;
-
-      if (!email.includes("@")) {
-        alert("Informe um e-mail válido para recuperar a senha.");
-        return;
-      }
-
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.href
-      });
-
-      if (error) {
-        alert("Não foi possível enviar a recuperação agora: " + error.message);
-        return;
-      }
-
-      alert("Enviamos um link de recuperação para seu e-mail. Verifique sua caixa de entrada e spam.");
     }
 
     async function login() {
@@ -1816,14 +1792,28 @@
         let points = 0;
         let exacts = 0;
         let resultHits = 0;
+        let goalHits = 0;
 
         playerGuesses.forEach(guess => {
           const game = db.jogos.find(g => g.id === guess.jogo_id);
           const score = calculateGuessPoints(guess, game);
 
           points += score.points;
-          if (score.exact) exacts++;
-          if (score.resultCorrect && game && game.status === "finalizado") resultHits++;
+
+          if (game && game.status === "finalizado" && game.resultado_a !== null && game.resultado_b !== null && game.resultado_a !== undefined && game.resultado_b !== undefined) {
+            const palpiteA = Number(guess.palpite_a);
+            const palpiteB = Number(guess.palpite_b);
+            const resultadoA = Number(game.resultado_a);
+            const resultadoB = Number(game.resultado_b);
+
+            if (palpiteA === resultadoA && palpiteB === resultadoB) {
+              exacts++;
+            } else {
+              if (resultType(palpiteA, palpiteB) === resultType(resultadoA, resultadoB)) resultHits++;
+              if (palpiteA === resultadoA) goalHits++;
+              if (palpiteB === resultadoB) goalHits++;
+            }
+          }
         });
 
         return {
@@ -1832,13 +1822,14 @@
           points,
           guesses: playerGuesses.length,
           exacts,
-          acertos: resultHits,
-          resultHits
+          resultHits,
+          goalHits
         };
       }).sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
-        if (b.acertos !== a.acertos) return b.acertos - a.acertos;
         if (b.exacts !== a.exacts) return b.exacts - a.exacts;
+        if (b.resultHits !== a.resultHits) return b.resultHits - a.resultHits;
+        if (b.goalHits !== a.goalHits) return b.goalHits - a.goalHits;
         return a.name.localeCompare(b.name);
       });
     }
@@ -2439,7 +2430,7 @@
       if (old) old.remove();
 
       if (ranking.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#667085;">Nenhum jogador no ranking ainda.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#667085;">Nenhum jogador no ranking ainda.</td></tr>`;
         return;
       }
 
@@ -2449,7 +2440,7 @@
           const me = ranking[pos];
           const div = document.createElement("div");
           div.className = "my-ranking-card";
-          div.innerHTML = `Sua posição<strong>${pos + 1}º lugar • ${me.points} pontos</strong><span class="muted">${me.guesses} palpites válidos</span>`;
+          div.innerHTML = `Sua posição<strong>${pos + 1}º lugar • ${me.points} pontos</strong><span class="muted">${me.guesses} palpites válidos • ${me.exacts} placares exatos • ${me.resultHits} vencedores/empates • ${me.goalHits} gols certos</span>`;
           card.insertBefore(div, card.querySelector(".table-wrap"));
         }
       }
@@ -2460,7 +2451,9 @@
           <td>${index === 0 ? "🥇 " : ""}${item.name}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
           <td><strong>${item.points}</strong></td>
           <td>${item.guesses}</td>
-          <td>${item.acertos ?? item.exacts ?? 0}</td>
+          <td>${item.exacts}</td>
+          <td>${item.resultHits}</td>
+          <td>${item.goalHits}</td>
         </tr>
       `).join("");
     }
