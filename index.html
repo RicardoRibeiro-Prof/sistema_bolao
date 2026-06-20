@@ -1026,8 +1026,8 @@
                 <input id="gameDate" type="datetime-local" />
               </div>
               <div>
-                <label for="gameDeadline">Prazo para palpitar</label>
-                <input id="gameDeadline" type="datetime-local" />
+                <label>Encerramento dos palpites</label>
+                <input value="Automático: no horário de início do jogo" disabled />
               </div>
             </div>
             <div class="form-row">
@@ -1564,7 +1564,7 @@
     }
 
     function getGameDeadline(game) {
-      return game && game.prazo_palpite ? game.prazo_palpite : (game ? game.data_hora : null);
+      return game ? game.data_hora : null;
     }
 
     function getUserPayment(userId, rodada = null) {
@@ -1706,7 +1706,6 @@
     async function addGame() {
       const rodada = document.getElementById("gameRound") ? (document.getElementById("gameRound").value.trim() || "Rodada 1") : "Rodada 1";
       const data_hora = document.getElementById("gameDate").value;
-      const prazo_palpite = document.getElementById("gameDeadline") ? (document.getElementById("gameDeadline").value || data_hora) : data_hora;
       const time_a = document.getElementById("teamA").value.trim();
       const time_b = document.getElementById("teamB").value.trim();
 
@@ -1721,7 +1720,6 @@
       const { error } = await supabaseClient.from("jogos").insert({
         rodada,
         data_hora,
-        prazo_palpite,
         time_a,
         time_b,
         status: "aberto"
@@ -1733,7 +1731,7 @@
 
       if (document.getElementById("gameRound")) document.getElementById("gameRound").value = "";
       document.getElementById("gameDate").value = "";
-      if (document.getElementById("gameDeadline")) document.getElementById("gameDeadline").value = "";
+      // Encerramento dos palpites é automático no horário do jogo.
       document.getElementById("teamA").value = "";
       document.getElementById("teamB").value = "";
 
@@ -2095,7 +2093,7 @@
                 <span class="pill ${game.status === "finalizado" ? "finished" : "open"}">${game.status === "finalizado" ? "Finalizado" : "Aberto"}</span>
               </div>
               <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
-              <p class="muted">Prazo: ${formatDeadline(game)}</p>
+              <p class="muted">Encerra: ${formatDeadline(game)}</p>
               ${game.status === "finalizado" ? `<p><strong>Resultado:</strong> ${game.resultado_a} x ${game.resultado_b}</p>` : ""}
               <div class="actions">
                 <button class="btn-danger" onclick="deleteGame('${game.id}')">Excluir</button>
@@ -2251,7 +2249,7 @@
             ${renderProgressBar(progress.filled, progress.total)}
             <p class="muted">Jogos: ${games.length}</p>
             <p class="${nextDeadline && new Date() > nextDeadline ? "deadline-closed" : "deadline-ok"}">
-              Prazo mais próximo: ${nextDeadline ? nextDeadline.toLocaleString("pt-BR") : "não definido"}
+              Próximo encerramento: ${nextDeadline ? nextDeadline.toLocaleString("pt-BR") : "não definido"}
             </p>
             <div class="actions">
               <button class="btn-primary" onclick="goToScreen('player_bets')">Abrir rodada</button>
@@ -2304,7 +2302,7 @@
                       <span class="pill ${guess ? "finished" : "open"}">${guess ? "Preenchido" : "Pendente"}</span>
                     </div>
                     <p class="muted">${formatDate(game.data_hora)}</p>
-                    <p class="${deadlineClosed ? "deadline-closed" : "deadline-ok"}">Prazo: ${formatDeadline(game)}</p>
+                    <p class="${deadlineClosed ? "deadline-closed" : "deadline-ok"}">Encerra: ${formatDeadline(game)}</p>
 
                     <div class="score-row">
                       <div>
@@ -2387,7 +2385,7 @@
       }
 
       if (isGameDeadlineClosed(game)) {
-        return showMsg("O prazo para palpitar neste jogo já encerrou.", "error");
+        return showMsg("Os palpites deste jogo já foram encerrados.", "error");
       }
 
       const aInput = document.getElementById("guessA_" + gameId);
@@ -2435,7 +2433,7 @@
 
       const closedWithoutGuess = games.find(game => isGameDeadlineClosed(game) && !db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id));
       if (closedWithoutGuess) {
-        return showMsg("Existe jogo com prazo encerrado sem palpite.", "error");
+        return showMsg("Existe jogo encerrado para palpites sem palpite.", "error");
       }
 
       if (!areAllRoundGuessesFilled(rodada)) {
