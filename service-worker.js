@@ -1,4 +1,4 @@
-const CACHE_NAME = "bolao-copa-login-sempre-v2";
+const CACHE_NAME = "bolao-copa-icons-premium-v3";
 const APP_FILES = [
   "./",
   "./index.html",
