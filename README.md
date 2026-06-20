@@ -1,21 +1,19 @@
-# Bolão da Copa Online - Por Rodada
+# Bolão da Copa Online - Experiência do Jogador
 
-Nesta versão, o bolão funciona por rodada.
+Melhorias implementadas:
 
-## Fluxo do jogador
-
-1. O jogador entra no app.
-2. Abre a aba Palpites.
-3. Preenche todos os jogos da rodada.
-4. Clica em Finalizar rodada e pagar.
-5. O app gera o Pix da rodada.
-6. O admin aprova o pagamento.
-7. A rodada passa a valer no ranking.
+- Bolão por rodada
+- Pagamento só depois de preencher todos os palpites da rodada
+- Barra de progresso da rodada
+- Prazo para palpites
+- Revisão dos palpites antes do Pix
+- Ranking com destaque para o jogador logado
+- Tela inicial mostrando o status da rodada
 
 ## Antes de publicar
 
 Rode no Supabase o arquivo:
 
-ATUALIZAR-SUPABASE-RODADAS.sql
+ATUALIZAR-SUPABASE-EXPERIENCIA.sql
 
 Depois envie os arquivos para o GitHub Pages.

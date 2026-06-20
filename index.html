@@ -627,6 +627,92 @@
       margin-bottom: 0;
     }
 
+
+    .progress-wrap {
+      margin: 10px 0 12px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: #eef2f6;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      border-radius: 999px;
+      transition: width .2s ease;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .review-item {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .review-item strong {
+      font-size: 14px;
+    }
+
+    .review-score {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .deadline-ok {
+      color: #027a48;
+      font-weight: 800;
+    }
+
+    .deadline-closed {
+      color: #b42318;
+      font-weight: 800;
+    }
+
+    .my-ranking-card {
+      background: linear-gradient(135deg, #ecfdf3, #eff8ff);
+      border: 1px solid #abefc6;
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .my-ranking-card strong {
+      font-size: 20px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    tr.me-row {
+      background: #ecfdf3 !important;
+      font-weight: 800;
+    }
+
     @media (min-width: 760px) {
       .login-page {
         display: grid;
@@ -877,7 +963,7 @@
                 <input id="gameRound" placeholder="Ex: Rodada 1" />
               </div>
               <div>
-                <label for="gameDate">Data e hora</label>
+                <label for="gameDate">Data e hora do jogo</label>
                 <input id="gameDate" type="datetime-local" />
               </div>
               <div>
@@ -891,8 +977,8 @@
                 <input id="teamB" placeholder="Ex: Argentina" />
               </div>
               <div>
-                <label>Pagamento por rodada</label>
-                <input value="O jogador paga após preencher todos os palpites da rodada." disabled />
+                <label for="gameDeadline">Prazo para palpitar</label>
+                <input id="gameDeadline" type="datetime-local" />
               </div>
             </div>
             <div class="actions">
@@ -1502,6 +1588,7 @@
     async function addGame() {
       const rodada = document.getElementById("gameRound").value.trim() || "Rodada 1";
       const data_hora = document.getElementById("gameDate").value;
+      const prazo_palpite = document.getElementById("gameDeadline").value || data_hora;
       const time_a = document.getElementById("teamA").value.trim();
       const time_b = document.getElementById("teamB").value.trim();
 
@@ -1516,6 +1603,7 @@
       const { error } = await supabaseClient.from("jogos").insert({
         rodada,
         data_hora,
+        prazo_palpite,
         time_a,
         time_b,
         status: "aberto"
@@ -1527,6 +1615,7 @@
 
       document.getElementById("gameRound").value = "";
       document.getElementById("gameDate").value = "";
+      document.getElementById("gameDeadline").value = "";
       document.getElementById("teamA").value = "";
       document.getElementById("teamB").value = "";
 
@@ -1889,6 +1978,7 @@
               </div>
               <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
               ${game.status === "finalizado" ? `<p><strong>Resultado:</strong> ${game.resultado_a} x ${game.resultado_b}</p>` : ""}
+              <p class="muted">Prazo: ${game.prazo_palpite ? formatDate(game.prazo_palpite) : "não definido"}</p>
               <div class="actions">
                 <button class="btn-danger" onclick="deleteGame('${game.id}')">Excluir</button>
               </div>
@@ -1973,13 +2063,32 @@
       const tbody = document.getElementById(tbodyId);
       const ranking = buildRanking();
 
+      const table = tbody.closest(".card");
+      let oldCard = table ? table.querySelector(".my-ranking-card") : null;
+      if (oldCard) oldCard.remove();
+
       if (ranking.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#667085;">Nenhum jogador aprovado no ranking.</td></tr>`;
         return;
       }
 
+      if (currentUser && currentUser.tipo === "jogador" && tbodyId === "rankingBodyPlayer" && table) {
+        const pos = ranking.findIndex(item => item.userId === currentUser.id);
+        if (pos >= 0) {
+          const me = ranking[pos];
+          const card = document.createElement("div");
+          card.className = "my-ranking-card";
+          card.innerHTML = `
+            Sua posição
+            <strong>${pos + 1}º lugar • ${me.points} pontos</strong>
+            <span class="muted">${me.guesses} palpites válidos</span>
+          `;
+          table.insertBefore(card, table.querySelector(".table-wrap"));
+        }
+      }
+
       tbody.innerHTML = ranking.map((item, index) => `
-        <tr class="${index === 0 ? "top1" : ""}">
+        <tr class="${index === 0 ? "top1" : ""} ${currentUser && item.userId === currentUser.id ? "me-row" : ""}">
           <td class="ranking-position">${index + 1}º</td>
           <td>${index === 0 ? "🥇 " : ""}${item.name}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
           <td><strong>${item.points}</strong></td>
@@ -2001,25 +2110,42 @@
       document.getElementById("playerGuesses").textContent = db.palpites.filter(g => g.usuario_id === currentUser.id).length;
       document.getElementById("playerPosition").textContent = position > 0 ? position + "º" : "-";
 
-      const openGames = db.jogos.filter(g => g.status === "aberto").sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora)).slice(0, 5);
-      const payStatus = getUserPaymentStatus(currentUser.id);
+      const openGames = db.jogos.filter(g => g.status === "aberto").sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora));
 
-      document.getElementById("playerOpenGamesBox").innerHTML = openGames.length
-        ? openGames.map(game => {
-          const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
-          return `
-            <div class="list-card">
-              <div class="list-title">
-                <strong>${game.time_a} x ${game.time_b}</strong>
-                <span class="pill ${guess ? "finished" : "warning"}">${guess ? "Palpite feito" : "Disponível"}</span>
-              </div>
-              <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
-              ${guess ? `<p>Seu palpite: <strong>${guess.palpite_a} x ${guess.palpite_b}</strong></p>` : ""}
-              <p>Pagamento da rodada: ${paymentStatusLabel(getUserPaymentStatus(currentUser.id, getGameRound(game)))}</p>
+      if (openGames.length === 0) {
+        document.getElementById("playerOpenGamesBox").innerHTML = `<div class="empty"><strong>Nenhum jogo disponível.</strong><br>Assim que o administrador cadastrar os jogos, eles aparecerão aqui.</div>`;
+        return;
+      }
+
+      const rounds = [...new Set(openGames.map(g => getGameRound(g)))].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+
+      document.getElementById("playerOpenGamesBox").innerHTML = rounds.map(rodada => {
+        const games = openGames.filter(g => getGameRound(g) === rodada);
+        const progress = getRoundProgress(rodada);
+        const payStatus = getUserPaymentStatus(currentUser.id, rodada);
+        const nextDeadline = games
+          .filter(g => g.prazo_palpite)
+          .map(g => new Date(g.prazo_palpite))
+          .filter(d => !isNaN(d))
+          .sort((a, b) => a - b)[0];
+
+        return `
+          <div class="list-card">
+            <div class="list-title">
+              <strong>${rodada}</strong>
+              ${paymentStatusLabel(payStatus)}
             </div>
-          `;
-        }).join("")
-        : `<div class="empty"><strong>Nenhum jogo disponível.</strong><br>Assim que o administrador cadastrar os jogos, eles aparecerão aqui.</div>`;
+            ${renderProgressBar(progress.filled, progress.total)}
+            <p class="muted">Jogos: ${games.length}</p>
+            <p class="${nextDeadline && new Date() > nextDeadline ? "deadline-closed" : "deadline-ok"}">
+              Prazo mais próximo: ${nextDeadline ? nextDeadline.toLocaleString("pt-BR") : "não definido"}
+            </p>
+            <div class="actions">
+              <button class="btn-primary" onclick="goToScreen('player_bets')">Abrir rodada</button>
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
     function renderPlayerBetGames() {
@@ -2041,6 +2167,8 @@
         const filled = games.filter(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)).length;
         const total = games.length;
         const allFilled = filled === total && total > 0;
+        const reviewId = "roundReview_" + rodada.replace(/[^a-zA-Z0-9]/g, "_");
+        const closedGames = games.filter(isGameDeadlineClosed).length;
 
         return `
           <div class="card" style="margin-bottom:14px;">
@@ -2048,12 +2176,16 @@
               <strong>${rodada}</strong>
               ${paymentStatusLabel(paymentStatus)}
             </div>
-            <p class="muted">${filled}/${total} palpites preenchidos</p>
+
+            ${renderProgressBar(filled, total)}
+
+            ${closedGames > 0 ? `<p class="deadline-closed">${closedGames} jogo(s) com prazo encerrado.</p>` : ""}
 
             <div class="games-grid">
               ${games.map(game => {
                 const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
-                const disabled = paymentStatus === "aprovado";
+                const deadlineClosed = isGameDeadlineClosed(game);
+                const disabled = paymentStatus === "aprovado" || deadlineClosed;
 
                 return `
                   <div class="player-game">
@@ -2062,6 +2194,9 @@
                       <span class="pill ${guess ? "finished" : "open"}">${guess ? "Preenchido" : "Pendente"}</span>
                     </div>
                     <p class="muted">${formatDate(game.data_hora)}</p>
+                    <p class="${deadlineClosed ? "deadline-closed" : "deadline-ok"}">
+                      Prazo: ${formatDeadline(game)}
+                    </p>
 
                     <div class="score-row">
                       <div>
@@ -2082,9 +2217,11 @@
               }).join("")}
             </div>
 
+            <div id="${reviewId}"></div>
+
             <div class="actions">
-              <button class="btn-primary" onclick="finishRoundAndPay('${rodada}')" ${paymentStatus === "aprovado" ? "disabled" : ""}>
-                ${allFilled ? "Finalizar rodada e pagar" : "Salvar todos os palpites"}
+              <button class="btn-primary" onclick="showRoundReview('${rodada}')" ${paymentStatus === "aprovado" ? "disabled" : ""}>
+                ${allFilled ? "Finalizar rodada" : "Conferir rodada"}
               </button>
             </div>
           </div>
@@ -2096,6 +2233,10 @@
       const game = db.jogos.find(g => g.id === gameId);
       if (!game || game.status === "finalizado") {
         return showMsg("Este jogo está bloqueado para palpites.", "error");
+      }
+
+      if (isGameDeadlineClosed(game)) {
+        return showMsg("O prazo para palpitar neste jogo já encerrou.", "error");
       }
 
       const aInput = document.getElementById("guessA_" + gameId);
@@ -2140,6 +2281,11 @@
 
     async function finishRoundAndPay(rodada) {
       const games = db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
+
+      const closedWithoutGuess = games.find(game => isGameDeadlineClosed(game) && !db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id));
+      if (closedWithoutGuess) {
+        return showMsg("A rodada não pode ser finalizada. Existe jogo com prazo encerrado sem palpite.", "error");
+      }
 
       for (const game of games) {
         const aInput = document.getElementById("guessA_" + game.id);
