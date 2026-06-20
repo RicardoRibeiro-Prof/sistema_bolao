@@ -888,11 +888,11 @@
 
         <div id="loginForm">
           <h2>Entrar</h2>
-          <p>Acesse sua conta.</p>
+          <p>Entre com e-mail e senha.</p>
 
           <div class="field">
-            <label for="loginUser">Usuário</label>
-            <input id="loginUser" placeholder="Ex: admin ou joao" />
+            <label for="loginUser">E-mail</label>
+            <input id="loginUser" type="email" placeholder="seuemail@exemplo.com" />
           </div>
 
           <div class="field">
@@ -907,7 +907,7 @@
 
         <div id="registerForm" class="hidden">
           <h2>Cadastro do jogador</h2>
-          <p>Crie sua conta para participar.</p>
+          <p>Crie sua conta com e-mail e senha.</p>
 
           <div class="field">
             <label for="regName">Nome completo</label>
@@ -920,8 +920,8 @@
           </div>
 
           <div class="field">
-            <label for="regUser">Usuário para login</label>
-            <input id="regUser" placeholder="Ex: joao2026" />
+            <label for="regUser">E-mail</label>
+            <input id="regUser" type="email" placeholder="seuemail@exemplo.com" />
           </div>
 
           <div class="field">
@@ -1235,7 +1235,7 @@
   </section>
 
   <script>
-    /* SUPABASE_KEY é pública/publishable e pode aparecer no front-end.
+    /* A chave abaixo é publishable/public e pode ficar no front-end.
        Nunca usar service_role, secret key ou senha do banco neste arquivo. */
     const SUPABASE_URL = "https://npsirjhnmmmbegxtfnxp.supabase.co";
     const SUPABASE_KEY = "sb_publishable_VRdDWnOZx3TCERRQX3TPBA_Befz_uEl";
@@ -1274,15 +1274,6 @@
       player_ranking: ["Ranking", "Classificação geral."]
     };
 
-    function escHtml(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
     function showMsg(text, type = "success") {
       const msg = document.getElementById("msg");
       msg.textContent = text || "";
@@ -1312,7 +1303,7 @@
 
     async function fetchAllData() {
       const [usuarios, jogos, palpites, pagamentos, configuracoes] = await Promise.all([
-        supabaseClient.from("usuarios").select("id,nome,telefone,usuario,tipo,criado_em").order("criado_em", { ascending: true }),
+        supabaseClient.from("perfis").select("id,nome,telefone,email,tipo,criado_em").order("criado_em", { ascending: true }),
         supabaseClient.from("jogos").select("*").order("data_hora", { ascending: true }),
         supabaseClient.from("palpites").select("*").order("criado_em", { ascending: true }),
         supabaseClient.from("pagamentos").select("*").order("criado_em", { ascending: true }),
@@ -1328,6 +1319,7 @@
       db.jogos = jogos.data || [];
       db.palpites = palpites.data || [];
       db.pagamentos = pagamentos.data || [];
+
       db.jogos = (db.jogos || []).map(j => ({
         ...j,
         rodada: j.rodada || "Rodada 1",
@@ -1352,11 +1344,16 @@
     async function registerPlayer() {
       const nome = document.getElementById("regName").value.trim();
       const telefone = document.getElementById("regPhone").value.trim();
-      const usuario = document.getElementById("regUser").value.trim();
+      const email = document.getElementById("regUser").value.trim().toLowerCase();
       const senha = document.getElementById("regPass").value.trim();
 
-      if (!nome || !telefone || !usuario || !senha) {
-        alert("Preencha nome, telefone, usuário e senha.");
+      if (!nome || !telefone || !email || !senha) {
+        alert("Preencha nome, telefone, e-mail e senha.");
+        return;
+      }
+
+      if (!email.includes("@")) {
+        alert("Informe um e-mail válido.");
         return;
       }
 
@@ -1365,16 +1362,19 @@
         return;
       }
 
-      const { data, error } = await supabaseClient.rpc("cadastrar_jogador", {
-        p_nome: nome,
-        p_telefone: telefone,
-        p_usuario: usuario,
-        p_senha: senha
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: {
+            nome,
+            telefone
+          }
+        }
       });
 
       if (error) {
-        alert("Erro ao cadastrar. O usuário pode já existir ou o SQL de segurança ainda não foi executado.");
-        console.error(error);
+        alert("Erro ao cadastrar: " + error.message);
         return;
       }
 
@@ -1383,39 +1383,30 @@
       document.getElementById("regUser").value = "";
       document.getElementById("regPass").value = "";
 
-      alert("Cadastro realizado! Agora entre, registre seus palpites e depois faça o Pix.");
+      alert("Cadastro realizado. Agora entre com seu e-mail e senha.");
       showLoginTab("login");
     }
 
     async function login() {
-      const usuario = document.getElementById("loginUser").value.trim();
+      const email = document.getElementById("loginUser").value.trim().toLowerCase();
       const senha = document.getElementById("loginPass").value.trim();
 
-      if (!usuario || !senha) {
-        alert("Informe usuário e senha.");
+      if (!email || !senha) {
+        alert("Informe e-mail e senha.");
         return;
       }
 
-      const { data, error } = await supabaseClient.rpc("login_usuario", {
-        p_usuario: usuario,
-        p_senha: senha
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password: senha
       });
 
       if (error) {
-        alert("Erro ao entrar. Verifique se o SQL de segurança foi executado no Supabase.");
-        console.error(error);
+        alert("E-mail ou senha inválidos.");
         return;
       }
 
-      const user = Array.isArray(data) ? data[0] : data;
-
-      if (!user) {
-        alert("Usuário ou senha inválidos.");
-        return;
-      }
-
-      currentUser = user;
-      sessionStorage.setItem(SESSION_KEY, user.id);
+      await loadCurrentUserFromAuth();
 
       document.getElementById("loginUser").value = "";
       document.getElementById("loginPass").value = "";
@@ -1423,23 +1414,71 @@
       await openApp();
     }
 
-    function logout() {
+    async function logout() {
+      await supabaseClient.auth.signOut();
       currentUser = null;
-      sessionStorage.removeItem(SESSION_KEY);
       document.getElementById("appPage").classList.add("hidden");
       document.getElementById("loginPage").classList.remove("hidden");
       document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
     }
 
     async function restoreSession() {
-      const userId = sessionStorage.getItem(SESSION_KEY);
-      if (!userId) return;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return;
 
-      const { data, error } = await supabaseClient.from("usuarios").select("id,nome,telefone,usuario,tipo,criado_em").eq("id", userId).maybeSingle();
-      if (!error && data) {
-        currentUser = data;
+      await loadCurrentUserFromAuth();
+
+      if (currentUser) {
         await openApp();
       }
+    }
+
+    async function loadCurrentUserFromAuth() {
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+
+      if (userError || !user) {
+        currentUser = null;
+        return;
+      }
+
+      let { data: perfil, error } = await supabaseClient
+        .from("perfis")
+        .select("id,nome,telefone,email,tipo,criado_em")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        alert("Erro ao carregar perfil: " + error.message);
+        currentUser = null;
+        return;
+      }
+
+      if (!perfil) {
+        const nome = user.user_metadata?.nome || user.email;
+        const telefone = user.user_metadata?.telefone || "";
+
+        const insert = await supabaseClient
+          .from("perfis")
+          .insert({
+            id: user.id,
+            nome,
+            telefone,
+            email: user.email,
+            tipo: "jogador"
+          })
+          .select("id,nome,telefone,email,tipo,criado_em")
+          .maybeSingle();
+
+        if (insert.error) {
+          alert("Erro ao criar perfil do usuário: " + insert.error.message);
+          currentUser = null;
+          return;
+        }
+
+        perfil = insert.data;
+      }
+
+      currentUser = perfil;
     }
 
     async function openApp() {
@@ -1988,18 +2027,7 @@
     }
 
     async function deletePlayer(playerId) {
-      const ok = confirm("Deseja excluir este jogador, pagamento e todos os palpites dele?");
-      if (!ok) return;
-
-      const { error } = await supabaseClient.from("usuarios").delete().eq("id", playerId);
-
-      if (error) {
-        return showMsg("Erro ao excluir jogador: " + error.message, "error");
-      }
-
-      await fetchAllData();
-      render();
-      showMsg("Jogador excluído.");
+      alert("Por segurança, usuários do Supabase Auth devem ser excluídos pelo painel do Supabase em Authentication > Users. O app não apaga usuários autenticados pelo navegador.");
     }
 
     async function savePixConfig() {
@@ -2130,7 +2158,7 @@
         leaderBox.innerHTML = `
           <div class="list-card">
             <div class="list-title">
-              <strong>🥇 ${escHtml(leader.name)}</strong>
+              <strong>🥇 ${leader.name}</strong>
               <span class="pill finished">${leader.points} pontos</span>
             </div>
             <p class="muted">${leader.guesses} palpites | ${leader.exacts} placares exatos</p>
@@ -2143,7 +2171,7 @@
         ? openGames.map(g => `
           <div class="list-card">
             <div class="list-title">
-              <strong>${escHtml(g.time_a)} x ${escHtml(g.time_b)}</strong>
+              <strong>${g.time_a} x ${g.time_b}</strong>
               <span class="pill open">Aberto</span>
             </div>
             <p class="muted">${formatDate(g.data_hora)}</p>
@@ -2166,7 +2194,7 @@
           <thead>
             <tr>
               <th>Jogador</th>
-              <th>Usuário</th>
+              <th>E-mail</th>
               <th>Telefone</th>
               <th>Pagamento</th>
               <th>Ação</th>
@@ -2175,11 +2203,11 @@
           <tbody>
             ${players.map(player => `
               <tr>
-                <td><strong>${escHtml(player.nome)}</strong></td>
-                <td>${escHtml(player.usuario)}</td>
-                <td>${escHtml(player.telefone || "-")}</td>
+                <td><strong>${player.nome}</strong></td>
+                <td>${player.email || "-"}</td>
+                <td>${player.telefone || "-"}</td>
                 <td>${paymentStatusLabel(getUserPaymentStatus(player.id))}</td>
-                <td><button class="btn-danger" onclick="deletePlayer('${player.id}')">Excluir</button></td>
+                <td><button class="btn-danger" onclick="deletePlayer('${player.id}')">Gerenciar</button></td>
               </tr>
             `).join("")}
           </tbody>
@@ -2237,7 +2265,7 @@
           .map(game => `
             <div class="list-card">
               <div class="list-title">
-                <strong>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</strong>
+                <strong>${game.time_a} x ${game.time_b}</strong>
                 <span class="pill ${game.status === "finalizado" ? "finished" : "open"}">${game.status === "finalizado" ? "Finalizado" : "Aberto"}</span>
               </div>
               <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
@@ -2252,7 +2280,7 @@
       }
 
       const resultOptions = `<option value="">Selecione o jogo</option>` + db.jogos
-        .map(g => `<option value="${g.id}">${formatDate(g.data_hora)} - ${escHtml(g.time_a)} x ${escHtml(g.time_b)} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
+        .map(g => `<option value="${g.id}">${formatDate(g.data_hora)} - ${g.time_a} x ${g.time_b} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
         .join("");
 
       document.getElementById("resultGame").innerHTML = resultOptions;
@@ -2270,7 +2298,7 @@
       box.innerHTML = finished.map(game => `
         <div class="list-card">
           <div class="list-title">
-            <strong>${escHtml(game.time_a)} ${game.resultado_a} x ${game.resultado_b} ${escHtml(game.time_b)}</strong>
+            <strong>${game.time_a} ${game.resultado_a} x ${game.resultado_b} ${game.time_b}</strong>
             <span class="pill finished">Finalizado</span>
           </div>
           <p class="muted">${formatDate(game.data_hora)}</p>
@@ -2310,8 +2338,8 @@
 
               return `
                 <tr>
-                  <td><strong>${escHtml(player.nome)}</strong></td>
-                  <td>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</td>
+                  <td><strong>${player.nome}</strong></td>
+                  <td>${game.time_a} x ${game.time_b}</td>
                   <td>${guess.palpite_a} x ${guess.palpite_b}</td>
                   <td>${game.status === "finalizado" ? game.resultado_a + " x " + game.resultado_b : "-"}</td>
                   <td>${paymentStatusLabel(payStatus)}</td>
@@ -2351,7 +2379,7 @@
       tbody.innerHTML = ranking.map((item, index) => `
         <tr class="${index === 0 ? "top1" : ""} ${currentUser && item.userId === currentUser.id ? "me-row" : ""}">
           <td class="ranking-position">${index + 1}º</td>
-          <td>${index === 0 ? "🥇 " : ""}${escHtml(item.name)}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
+          <td>${index === 0 ? "🥇 " : ""}${item.name}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
           <td><strong>${item.points}</strong></td>
           <td>${item.guesses}</td>
           <td>${item.exacts}</td>
@@ -2454,7 +2482,7 @@
                 return `
                   <div class="player-game">
                     <div class="list-title">
-                      <h4>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</h4>
+                      <h4>${game.time_a} x ${game.time_b}</h4>
                       <span class="pill ${guess ? "finished" : "open"}">${guess ? "Preenchido" : "Pendente"}</span>
                     </div>
                     <p class="muted">${formatDate(game.data_hora)}</p>
@@ -2462,11 +2490,11 @@
 
                     <div class="score-row">
                       <div>
-                        <label>${escHtml(game.time_a)}</label>
+                        <label>${game.time_a}</label>
                         <input id="guessA_${game.id}" type="number" min="0" value="${guess ? guess.palpite_a : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
                       </div>
                       <div>
-                        <label>${escHtml(game.time_b)}</label>
+                        <label>${game.time_b}</label>
                         <input id="guessB_${game.id}" type="number" min="0" value="${guess ? guess.palpite_b : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
                       </div>
                     </div>
@@ -2497,7 +2525,7 @@
             const guess = db.palpites.find(p => p.usuario_id === currentUser.id && p.jogo_id === game.id);
             return `
               <div class="review-item">
-                <strong>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</strong>
+                <strong>${game.time_a} x ${game.time_b}</strong>
                 <span class="review-score">${guess ? guess.palpite_a + " x " + guess.palpite_b : "Falta"}</span>
               </div>
             `;
@@ -2715,7 +2743,7 @@
 
                 return `
                   <tr>
-                    <td><strong>${escHtml(game.time_a)} x ${escHtml(game.time_b)}</strong></td>
+                    <td><strong>${game.time_a} x ${game.time_b}</strong></td>
                     <td>${formatDate(game.data_hora)}</td>
                     <td>${guess.palpite_a} x ${guess.palpite_b}</td>
                     <td>${game.status === "finalizado" ? game.resultado_a + " x " + game.resultado_b : "Aguardando"}</td>
@@ -2771,6 +2799,12 @@
         document.getElementById("currentPaymentStatus").innerHTML = "";
       }
     }
+
+    supabaseClient.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        currentUser = null;
+      }
+    });
 
     restoreSession();
   </script>
