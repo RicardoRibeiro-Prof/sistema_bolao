@@ -41,25 +41,27 @@
     .login-page {
       min-height: 100vh;
       background: linear-gradient(160deg, #07824a 0%, #155eef 100%);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
     }
 
     .login-hero {
       color: white;
-      padding: 34px 22px 18px;
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .login-hero h1 {
-      font-size: 34px;
+      font-size: 42px;
       margin: 0 0 12px;
       line-height: 1.08;
       letter-spacing: -.02em;
     }
 
     .login-hero p {
-      font-size: 16px;
+      font-size: 17px;
       max-width: 520px;
       line-height: 1.4;
       opacity: .92;
@@ -68,6 +70,7 @@
 
     .price-badge {
       display: inline-block;
+      width: fit-content;
       margin-top: 18px;
       padding: 12px 16px;
       border-radius: 999px;
@@ -78,16 +81,20 @@
     }
 
     .login-card-wrap {
-      padding: 0 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
     }
 
     .login-card {
       width: 100%;
-      max-width: 520px;
-      margin: 0 auto;
+      max-width: 470px;
       background: white;
       border-radius: 28px;
-      padding: 20px;
+      padding: 24px;
       box-shadow: 0 18px 55px rgba(0,0,0,.22);
     }
 
@@ -139,7 +146,7 @@
       padding: 12px 13px;
       border: 1px solid #d0d5dd;
       border-radius: 14px;
-      font-size: 16px;
+      font-size: 15px;
       outline: none;
       background: #fff;
       font-family: Arial, Helvetica, sans-serif;
@@ -198,68 +205,135 @@
     }
 
     .app {
+      display: grid;
+      grid-template-columns: 270px 1fr;
       min-height: 100vh;
       background: var(--bg);
     }
 
     aside {
-      display: none;
+      background: linear-gradient(180deg, #0f172a, #111827);
+      color: white;
+      padding: 22px 16px;
+      position: fixed;
+      width: 270px;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      overflow-y: auto;
+      display: block;
     }
 
-    main {
+    .brand {
+      padding: 8px 8px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: rgba(255,255,255,.72);
+      line-height: 1.35;
+    }
+
+    .user-pill {
+      margin-top: 14px;
+      background: rgba(255,255,255,.08);
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu-btn {
       width: 100%;
-      padding: 0;
-      padding-bottom: 92px;
+      border: 0;
+      background: transparent;
+      color: rgba(255,255,255,.86);
+      font-size: 15px;
+      font-weight: 800;
+      padding: 13px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-btn:hover {
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      transform: none;
+    }
+
+    .menu-btn.active {
+      background: #ffffff;
+      color: #111827;
+    }
+
+    .logout-btn {
+      margin-top: 18px;
+      width: 100%;
+      background: rgba(255,255,255,.12);
+      color: white;
+    }
+
+    .mobile-menu { display: none; }
+
+    main {
+      grid-column: 2;
+      width: 100%;
+      padding: 24px;
+      padding-bottom: 24px;
     }
 
     .content {
-      max-width: 760px;
+      max-width: 1180px;
       margin: 0 auto;
-      min-height: 100vh;
     }
 
     .hero {
-      position: sticky;
-      top: 0;
-      z-index: 20;
       background: linear-gradient(135deg, var(--green), var(--blue));
       color: white;
-      padding: 18px 18px 16px;
-      border-radius: 0 0 26px 26px;
+      padding: 22px 26px;
+      border-radius: 22px;
+      margin-bottom: 18px;
       box-shadow: 0 12px 26px rgba(16, 24, 40, .14);
-    }
-
-    .hero::before {
-      content: "🏆 Bolão da Copa";
-      display: block;
-      font-weight: 900;
-      font-size: 13px;
-      opacity: .9;
-      margin-bottom: 8px;
     }
 
     .hero h2 {
       margin: 0;
-      font-size: 24px;
+      font-size: 26px;
       line-height: 1.15;
       letter-spacing: -.02em;
     }
 
     .hero p {
       margin: 5px 0 0;
-      font-size: 13px;
-      opacity: .88;
+      font-size: 14px;
+      opacity: .9;
     }
 
     .screen {
       display: none;
-      padding: 16px;
       animation: fadeIn .18s ease;
     }
 
-    .screen.active {
-      display: block;
-    }
+    .screen.active { display: block; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
@@ -269,7 +343,7 @@
     .grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 12px;
+      gap: 14px;
       align-items: start;
     }
 
@@ -277,27 +351,45 @@
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 22px;
-      padding: 16px;
+      padding: 18px;
       box-shadow: var(--shadow);
       min-width: 0;
     }
 
-    .span-3, .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 {
-      grid-column: span 12;
-    }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
 
     h3 {
       margin: 0 0 14px;
-      font-size: 19px;
+      font-size: 20px;
       letter-spacing: -.01em;
     }
 
-    .form-row, .form-row-3, .score-row {
+    .form-row {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       margin-bottom: 12px;
-      max-width: none;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+      max-width: 360px;
     }
 
     .actions {
@@ -307,13 +399,9 @@
       margin-top: 10px;
     }
 
-    .actions button {
-      flex: 1 1 auto;
-    }
-
     .message {
       display: none;
-      margin: 12px 16px 0;
+      margin-bottom: 14px;
       padding: 12px 14px;
       border-radius: 14px;
       font-weight: 800;
@@ -339,16 +427,15 @@
     }
 
     .stat-card {
-      min-height: 108px;
+      min-height: 116px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      grid-column: span 4;
-      padding: 14px;
+      padding: 16px;
     }
 
     .stat-number {
-      font-size: 30px;
+      font-size: 34px;
       font-weight: 900;
       color: var(--green);
       line-height: 1;
@@ -358,7 +445,7 @@
       margin-top: 7px;
       color: var(--muted);
       font-weight: 800;
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1.2;
     }
 
@@ -423,7 +510,7 @@
       width: 100%;
       border-collapse: collapse;
       background: white;
-      min-width: 680px;
+      min-width: 760px;
     }
 
     th, td {
@@ -443,6 +530,7 @@
     }
 
     tr.top1 { background: #fffaeb; }
+    tr.me-row { background: #ecfdf3 !important; font-weight: 800; }
 
     .ranking-position {
       font-weight: 900;
@@ -451,8 +539,8 @@
 
     .two-columns {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
+      grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      gap: 14px;
       align-items: start;
     }
 
@@ -468,7 +556,7 @@
 
     .games-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
       gap: 12px;
     }
 
@@ -485,14 +573,9 @@
       font-size: 17px;
     }
 
-    .player-game .score-row {
-      max-width: none;
-      grid-template-columns: 1fr 1fr;
-    }
-
     .payment-box {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 290px 1fr;
       gap: 14px;
       align-items: start;
     }
@@ -549,88 +632,7 @@
       line-height: 1.5;
     }
 
-    .mobile-bottom-nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 50;
-      background: rgba(255, 255, 255, .96);
-      backdrop-filter: blur(14px);
-      border-top: 1px solid var(--border);
-      padding: 8px 8px calc(8px + var(--safe-bottom));
-      display: grid;
-      gap: 6px;
-      box-shadow: 0 -10px 28px rgba(16, 24, 40, .08);
-    }
-
-    .mobile-bottom-nav.admin {
-      grid-template-columns: repeat(5, 1fr);
-    }
-
-    .mobile-bottom-nav.player {
-      grid-template-columns: repeat(5, 1fr);
-    }
-
-    .bottom-btn {
-      background: transparent;
-      color: #667085;
-      min-height: 54px;
-      border-radius: 16px;
-      padding: 6px 4px;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-    }
-
-    .bottom-btn span {
-      font-size: 19px;
-      line-height: 1;
-    }
-
-    .bottom-btn.active {
-      background: #ecfdf3;
-      color: var(--green);
-    }
-
-    .more-sheet {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 84px;
-      z-index: 70;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: 0 18px 45px rgba(16,24,40,.22);
-      padding: 12px;
-      display: none;
-    }
-
-    .more-sheet.active {
-      display: block;
-    }
-
-    .more-sheet button {
-      width: 100%;
-      background: #f8fafc;
-      color: #101828;
-      margin-bottom: 8px;
-      text-align: left;
-    }
-
-    .more-sheet button:last-child {
-      margin-bottom: 0;
-    }
-
-
-    .progress-wrap {
-      margin: 10px 0 12px;
-    }
+    .progress-wrap { margin: 10px 0 12px; }
 
     .progress-label {
       display: flex;
@@ -653,7 +655,6 @@
       height: 100%;
       background: linear-gradient(90deg, var(--green), var(--blue));
       border-radius: 999px;
-      transition: width .2s ease;
     }
 
     .review-list {
@@ -673,10 +674,6 @@
       align-items: center;
     }
 
-    .review-item strong {
-      font-size: 14px;
-    }
-
     .review-score {
       font-size: 16px;
       font-weight: 900;
@@ -684,15 +681,8 @@
       white-space: nowrap;
     }
 
-    .deadline-ok {
-      color: #027a48;
-      font-weight: 800;
-    }
-
-    .deadline-closed {
-      color: #b42318;
-      font-weight: 800;
-    }
+    .deadline-ok { color: #027a48; font-weight: 800; }
+    .deadline-closed { color: #b42318; font-weight: 800; }
 
     .my-ranking-card {
       background: linear-gradient(135deg, #ecfdf3, #eff8ff);
@@ -708,105 +698,174 @@
       margin-top: 4px;
     }
 
-    tr.me-row {
-      background: #ecfdf3 !important;
-      font-weight: 800;
+    .mobile-bottom-nav, .more-sheet {
+      display: none;
     }
 
-    @media (min-width: 760px) {
+    @media (max-width: 759px) {
       .login-page {
-        display: grid;
-        grid-template-columns: 1.05fr .95fr;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
       }
 
       .login-hero {
-        padding: 56px;
-        justify-content: center;
+        padding: 34px 22px 18px;
       }
 
+      .login-hero h1 { font-size: 34px; }
+
       .login-card-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 28px;
+        padding: 0 14px 18px;
+        display: block;
+      }
+
+      .login-card {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 20px;
       }
 
       .app {
-        display: grid;
-        grid-template-columns: 270px 1fr;
+        display: block;
       }
 
       aside {
-        display: block;
-        background: linear-gradient(180deg, #0f172a, #111827);
-        color: white;
-        padding: 22px 16px;
-        position: fixed;
-        width: 270px;
-        height: 100vh;
-        left: 0;
-        top: 0;
-        overflow-y: auto;
+        display: none;
       }
 
       main {
-        grid-column: 2;
-        padding: 24px;
-        padding-bottom: 24px;
+        width: 100%;
+        padding: 0;
+        padding-bottom: 92px;
       }
 
       .content {
-        max-width: 1180px;
+        max-width: 760px;
+        min-height: 100vh;
       }
 
       .hero {
-        position: relative;
-        border-radius: 22px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-radius: 0 0 26px 26px;
+        padding: 18px 18px 16px;
+        margin-bottom: 0;
       }
+
+      .hero::before {
+        content: "🏆 Bolão da Copa";
+        display: block;
+        font-weight: 900;
+        font-size: 13px;
+        opacity: .9;
+        margin-bottom: 8px;
+      }
+
+      .hero h2 { font-size: 24px; }
 
       .screen {
-        padding: 0;
+        padding: 16px;
       }
 
-      .mobile-bottom-nav, .more-sheet {
-        display: none !important;
+      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 {
+        grid-column: span 12;
       }
 
-      .span-3 { grid-column: span 3; }
-      .span-4 { grid-column: span 4; }
-      .span-5 { grid-column: span 5; }
-      .span-6 { grid-column: span 6; }
-      .span-7 { grid-column: span 7; }
-      .span-8 { grid-column: span 8; }
-      .span-12 { grid-column: span 12; }
-
-      .form-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .stat-card {
+        grid-column: span 4;
+        min-height: 108px;
+        padding: 14px;
       }
 
-      .form-row-3 {
-        grid-template-columns: 1.1fr 1fr 1fr;
+      .form-row, .form-row-3, .score-row {
+        grid-template-columns: 1fr;
+        max-width: none;
       }
 
-      .score-row {
+      .player-game .score-row {
         grid-template-columns: 1fr 1fr;
-        max-width: 360px;
       }
 
-      .two-columns {
-        grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+      .two-columns, .payment-box {
+        grid-template-columns: 1fr;
       }
 
       .games-grid {
-        grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-      }
-
-      .payment-box {
-        grid-template-columns: 290px 1fr;
+        grid-template-columns: 1fr;
       }
 
       table {
-        min-width: 760px;
+        min-width: 680px;
+      }
+
+      .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        background: rgba(255, 255, 255, .96);
+        backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border);
+        padding: 8px 8px calc(8px + var(--safe-bottom));
+        display: grid;
+        gap: 6px;
+        box-shadow: 0 -10px 28px rgba(16, 24, 40, .08);
+      }
+
+      .mobile-bottom-nav.admin, .mobile-bottom-nav.player {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .bottom-btn {
+        background: transparent;
+        color: #667085;
+        min-height: 54px;
+        border-radius: 16px;
+        padding: 6px 4px;
+        font-size: 11px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+      }
+
+      .bottom-btn span {
+        font-size: 19px;
+        line-height: 1;
+      }
+
+      .bottom-btn.active {
+        background: #ecfdf3;
+        color: var(--green);
+      }
+
+      .more-sheet {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 84px;
+        z-index: 70;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: 0 18px 45px rgba(16,24,40,.22);
+        padding: 12px;
+        display: none;
+      }
+
+      .more-sheet.active { display: block; }
+
+      .more-sheet button {
+        width: 100%;
+        background: #f8fafc;
+        color: #101828;
+        margin-bottom: 8px;
+        text-align: left;
       }
     }
   </style>
@@ -967,18 +1026,18 @@
                 <input id="gameDate" type="datetime-local" />
               </div>
               <div>
-                <label for="teamA">Time A</label>
-                <input id="teamA" placeholder="Ex: Brasil" />
+                <label for="gameDeadline">Prazo para palpitar</label>
+                <input id="gameDeadline" type="datetime-local" />
               </div>
             </div>
             <div class="form-row">
               <div>
-                <label for="teamB">Time B</label>
-                <input id="teamB" placeholder="Ex: Argentina" />
+                <label for="teamA">Time A</label>
+                <input id="teamA" placeholder="Ex: Brasil" />
               </div>
               <div>
-                <label for="gameDeadline">Prazo para palpitar</label>
-                <input id="gameDeadline" type="datetime-local" />
+                <label for="teamB">Time B</label>
+                <input id="teamB" placeholder="Ex: Argentina" />
               </div>
             </div>
             <div class="actions">
@@ -1204,7 +1263,7 @@
 
     const playerScreens = {
       player_home: ["Início", "Resumo da sua participação."],
-      player_bets: ["Palpites", "Palpites por rodada."],
+      player_bets: ["Palpites", "Registre seus placares."],
       player_payment: ["Pagamento", "Pague via Pix."],
       player_my_guesses: ["Meus Palpites", "Seus palpites registrados."],
       player_regulation: ["Regulamento", "Regras do bolão."],
@@ -1256,6 +1315,17 @@
       db.jogos = jogos.data || [];
       db.palpites = palpites.data || [];
       db.pagamentos = pagamentos.data || [];
+      db.jogos = (db.jogos || []).map(j => ({
+        ...j,
+        rodada: j.rodada || "Rodada 1",
+        prazo_palpite: j.prazo_palpite || j.data_hora
+      }));
+
+      db.pagamentos = (db.pagamentos || []).map(p => ({
+        ...p,
+        rodada: p.rodada || "Rodada 1"
+      }));
+
       db.configuracoes = configuracoes.data || {
         id: 1,
         chave_pix: "configure-sua-chave-pix",
@@ -1417,38 +1487,46 @@
         ];
       }
 
-      menu.innerHTML = items.map(item => `
-        <button class="menu-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">${item[1]} ${item[2]}</button>
-      `).join("");
+      if (menu) {
+        menu.innerHTML = items.map(item => `
+          <button class="menu-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">${item[1]} ${item[2]}</button>
+        `).join("");
+      }
 
-      mobile.innerHTML = items.map(item => `<option value="${item[0]}">${item[1]} ${item[2]}</option>`).join("");
+      if (mobile) {
+        mobile.innerHTML = items.map(item => `<option value="${item[0]}">${item[1]} ${item[2]}</option>`).join("");
+      }
 
-      const mainItems = currentUser.tipo === "admin" ? items.slice(0, 4) : items.slice(0, 4);
-      const extraItems = currentUser.tipo === "admin" ? items.slice(4) : items.slice(4);
+      if (bottom && sheet) {
+        const mainItems = items.slice(0, 4);
+        const extraItems = items.slice(4);
 
-      bottom.className = "mobile-bottom-nav " + (currentUser.tipo === "admin" ? "admin" : "player");
+        bottom.className = "mobile-bottom-nav " + (currentUser.tipo === "admin" ? "admin" : "player");
 
-      bottom.innerHTML = mainItems.map(item => `
-        <button class="bottom-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">
-          <span>${item[1]}</span>${item[2]}
-        </button>
-      `).join("") + `
-        <button class="bottom-btn" id="moreButton" onclick="toggleMoreSheet()">
-          <span>☰</span>Mais
-        </button>
-      `;
+        bottom.innerHTML = mainItems.map(item => `
+          <button class="bottom-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">
+            <span>${item[1]}</span>${item[2]}
+          </button>
+        `).join("") + `
+          <button class="bottom-btn" id="moreButton" onclick="toggleMoreSheet()">
+            <span>☰</span>Mais
+          </button>
+        `;
 
-      sheet.innerHTML = extraItems.map(item => `
-        <button onclick="goToScreen('${item[0]}'); closeMoreSheet();">${item[1]} ${item[2]}</button>
-      `).join("") + `<button onclick="logout()">🚪 Sair</button>`;
+        sheet.innerHTML = extraItems.map(item => `
+          <button onclick="goToScreen('${item[0]}'); closeMoreSheet();">${item[1]} ${item[2]}</button>
+        `).join("") + `<button onclick="logout()">🚪 Sair</button>`;
+      }
     }
 
     function toggleMoreSheet() {
-      document.getElementById("moreSheet").classList.toggle("active");
+      const sheet = document.getElementById("moreSheet");
+      if (sheet) sheet.classList.toggle("active");
     }
 
     function closeMoreSheet() {
-      document.getElementById("moreSheet").classList.remove("active");
+      const sheet = document.getElementById("moreSheet");
+      if (sheet) sheet.classList.remove("active");
     }
 
     function goToScreen(screen) {
@@ -1485,14 +1563,13 @@
       return game && game.rodada ? game.rodada : "Rodada 1";
     }
 
-    function getRounds() {
-      const rounds = [...new Set(db.jogos.map(g => getGameRound(g)))];
-      return rounds.sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+    function getGameDeadline(game) {
+      return game && game.prazo_palpite ? game.prazo_palpite : (game ? game.data_hora : null);
     }
 
     function getUserPayment(userId, rodada = null) {
       if (rodada) {
-        return db.pagamentos.find(p => p.usuario_id === userId && (p.rodada || "Rodada 1") === rodada);
+        return db.pagamentos.find(p => p.usuario_id === userId && ((p.rodada || "Rodada 1") === rodada));
       }
       return db.pagamentos.find(p => p.usuario_id === userId);
     }
@@ -1505,6 +1582,47 @@
     function isUserApproved(userId, rodada = null) {
       if (rodada) return getUserPaymentStatus(userId, rodada) === "aprovado";
       return db.pagamentos.some(p => p.usuario_id === userId && p.status === "aprovado");
+    }
+
+    function isGameDeadlineClosed(game) {
+      const value = getGameDeadline(game);
+      if (!value) return false;
+      const deadline = new Date(value);
+      if (isNaN(deadline)) return false;
+      return new Date() > deadline;
+    }
+
+    function formatDeadline(game) {
+      const value = getGameDeadline(game);
+      if (!value) return "Sem prazo definido";
+      const deadline = new Date(value);
+      if (isNaN(deadline)) return "Sem prazo definido";
+      return deadline.toLocaleString("pt-BR");
+    }
+
+    function getRoundOpenGames(rodada) {
+      return db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
+    }
+
+    function getRoundProgress(rodada) {
+      const games = getRoundOpenGames(rodada);
+      const total = games.length;
+      const filled = games.filter(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)).length;
+      const percent = total > 0 ? Math.round((filled / total) * 100) : 0;
+      return { total, filled, percent };
+    }
+
+    function renderProgressBar(filled, total) {
+      const percent = total > 0 ? Math.round((filled / total) * 100) : 0;
+      return `
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>${filled}/${total} palpites</span>
+            <span>${percent}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+        </div>
+      `;
     }
 
     function areAllRoundGuessesFilled(rodada) {
@@ -1586,9 +1704,9 @@
     }
 
     async function addGame() {
-      const rodada = document.getElementById("gameRound").value.trim() || "Rodada 1";
+      const rodada = document.getElementById("gameRound") ? (document.getElementById("gameRound").value.trim() || "Rodada 1") : "Rodada 1";
       const data_hora = document.getElementById("gameDate").value;
-      const prazo_palpite = document.getElementById("gameDeadline").value || data_hora;
+      const prazo_palpite = document.getElementById("gameDeadline") ? (document.getElementById("gameDeadline").value || data_hora) : data_hora;
       const time_a = document.getElementById("teamA").value.trim();
       const time_b = document.getElementById("teamB").value.trim();
 
@@ -1613,9 +1731,9 @@
         return showMsg("Erro ao cadastrar jogo: " + error.message, "error");
       }
 
-      document.getElementById("gameRound").value = "";
+      if (document.getElementById("gameRound")) document.getElementById("gameRound").value = "";
       document.getElementById("gameDate").value = "";
-      document.getElementById("gameDeadline").value = "";
+      if (document.getElementById("gameDeadline")) document.getElementById("gameDeadline").value = "";
       document.getElementById("teamA").value = "";
       document.getElementById("teamB").value = "";
 
@@ -1977,8 +2095,8 @@
                 <span class="pill ${game.status === "finalizado" ? "finished" : "open"}">${game.status === "finalizado" ? "Finalizado" : "Aberto"}</span>
               </div>
               <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
+              <p class="muted">Prazo: ${formatDeadline(game)}</p>
               ${game.status === "finalizado" ? `<p><strong>Resultado:</strong> ${game.resultado_a} x ${game.resultado_b}</p>` : ""}
-              <p class="muted">Prazo: ${game.prazo_palpite ? formatDate(game.prazo_palpite) : "não definido"}</p>
               <div class="actions">
                 <button class="btn-danger" onclick="deleteGame('${game.id}')">Excluir</button>
               </div>
@@ -1987,7 +2105,7 @@
       }
 
       const resultOptions = `<option value="">Selecione o jogo</option>` + db.jogos
-        .map(g => `<option value="${g.id}">${getGameRound(g)} - ${formatDate(g.data_hora)} - ${g.time_a} x ${g.time_b} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
+        .map(g => `<option value="${g.id}">${formatDate(g.data_hora)} - ${g.time_a} x ${g.time_b} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
         .join("");
 
       document.getElementById("resultGame").innerHTML = resultOptions;
@@ -2063,27 +2181,23 @@
       const tbody = document.getElementById(tbodyId);
       const ranking = buildRanking();
 
-      const table = tbody.closest(".card");
-      let oldCard = table ? table.querySelector(".my-ranking-card") : null;
-      if (oldCard) oldCard.remove();
+      const card = tbody.closest(".card");
+      const old = card ? card.querySelector(".my-ranking-card") : null;
+      if (old) old.remove();
 
       if (ranking.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#667085;">Nenhum jogador aprovado no ranking.</td></tr>`;
         return;
       }
 
-      if (currentUser && currentUser.tipo === "jogador" && tbodyId === "rankingBodyPlayer" && table) {
+      if (currentUser && currentUser.tipo === "jogador" && tbodyId === "rankingBodyPlayer" && card) {
         const pos = ranking.findIndex(item => item.userId === currentUser.id);
         if (pos >= 0) {
           const me = ranking[pos];
-          const card = document.createElement("div");
-          card.className = "my-ranking-card";
-          card.innerHTML = `
-            Sua posição
-            <strong>${pos + 1}º lugar • ${me.points} pontos</strong>
-            <span class="muted">${me.guesses} palpites válidos</span>
-          `;
-          table.insertBefore(card, table.querySelector(".table-wrap"));
+          const div = document.createElement("div");
+          div.className = "my-ranking-card";
+          div.innerHTML = `Sua posição<strong>${pos + 1}º lugar • ${me.points} pontos</strong><span class="muted">${me.guesses} palpites válidos</span>`;
+          card.insertBefore(div, card.querySelector(".table-wrap"));
         }
       }
 
@@ -2124,8 +2238,7 @@
         const progress = getRoundProgress(rodada);
         const payStatus = getUserPaymentStatus(currentUser.id, rodada);
         const nextDeadline = games
-          .filter(g => g.prazo_palpite)
-          .map(g => new Date(g.prazo_palpite))
+          .map(g => new Date(getGameDeadline(g)))
           .filter(d => !isNaN(d))
           .sort((a, b) => a - b)[0];
 
@@ -2168,7 +2281,6 @@
         const total = games.length;
         const allFilled = filled === total && total > 0;
         const reviewId = "roundReview_" + rodada.replace(/[^a-zA-Z0-9]/g, "_");
-        const closedGames = games.filter(isGameDeadlineClosed).length;
 
         return `
           <div class="card" style="margin-bottom:14px;">
@@ -2178,8 +2290,6 @@
             </div>
 
             ${renderProgressBar(filled, total)}
-
-            ${closedGames > 0 ? `<p class="deadline-closed">${closedGames} jogo(s) com prazo encerrado.</p>` : ""}
 
             <div class="games-grid">
               ${games.map(game => {
@@ -2194,9 +2304,7 @@
                       <span class="pill ${guess ? "finished" : "open"}">${guess ? "Preenchido" : "Pendente"}</span>
                     </div>
                     <p class="muted">${formatDate(game.data_hora)}</p>
-                    <p class="${deadlineClosed ? "deadline-closed" : "deadline-ok"}">
-                      Prazo: ${formatDeadline(game)}
-                    </p>
+                    <p class="${deadlineClosed ? "deadline-closed" : "deadline-ok"}">Prazo: ${formatDeadline(game)}</p>
 
                     <div class="score-row">
                       <div>
@@ -2209,9 +2317,7 @@
                       </div>
                     </div>
 
-                    <button class="btn-muted" onclick="saveSingleRoundGuess('${game.id}')" ${disabled ? "disabled" : ""}>
-                      Salvar este palpite
-                    </button>
+                    <button class="btn-muted" onclick="saveSingleRoundGuess('${game.id}')" ${disabled ? "disabled" : ""}>Salvar este palpite</button>
                   </div>
                 `;
               }).join("")}
@@ -2227,6 +2333,51 @@
           </div>
         `;
       }).join("");
+    }
+
+    function getRoundReviewHtml(rodada) {
+      const games = getRoundOpenGames(rodada);
+      return `
+        <div class="review-list">
+          ${games.map(game => {
+            const guess = db.palpites.find(p => p.usuario_id === currentUser.id && p.jogo_id === game.id);
+            return `
+              <div class="review-item">
+                <strong>${game.time_a} x ${game.time_b}</strong>
+                <span class="review-score">${guess ? guess.palpite_a + " x " + guess.palpite_b : "Falta"}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function showRoundReview(rodada) {
+      const progress = getRoundProgress(rodada);
+
+      if (progress.filled < progress.total) {
+        showMsg("Preencha todos os palpites da " + rodada + " antes de finalizar.", "error");
+        return;
+      }
+
+      const box = document.getElementById("roundReview_" + rodada.replace(/[^a-zA-Z0-9]/g, "_"));
+      if (!box) return;
+
+      box.innerHTML = `
+        <div class="form-help">
+          <strong>Confira seus palpites:</strong>
+          ${getRoundReviewHtml(rodada)}
+          <div class="actions">
+            <button class="btn-primary" onclick="finishRoundAndPay('${rodada}')">Confirmar e gerar Pix</button>
+            <button class="btn-muted" onclick="hideRoundReview('${rodada}')">Voltar</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function hideRoundReview(rodada) {
+      const box = document.getElementById("roundReview_" + rodada.replace(/[^a-zA-Z0-9]/g, "_"));
+      if (box) box.innerHTML = "";
     }
 
     async function saveSingleRoundGuess(gameId) {
@@ -2284,25 +2435,11 @@
 
       const closedWithoutGuess = games.find(game => isGameDeadlineClosed(game) && !db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id));
       if (closedWithoutGuess) {
-        return showMsg("A rodada não pode ser finalizada. Existe jogo com prazo encerrado sem palpite.", "error");
+        return showMsg("Existe jogo com prazo encerrado sem palpite.", "error");
       }
-
-      for (const game of games) {
-        const aInput = document.getElementById("guessA_" + game.id);
-        const bInput = document.getElementById("guessB_" + game.id);
-
-        if (!aInput || !bInput || aInput.value === "" || bInput.value === "") {
-          return showMsg("Preencha todos os palpites da " + rodada + " antes de pagar.", "error");
-        }
-
-        await saveSingleRoundGuess(game.id);
-      }
-
-      await fetchAllData();
 
       if (!areAllRoundGuessesFilled(rodada)) {
-        render();
-        return showMsg("Ainda falta palpite nessa rodada.", "error");
+        return showMsg("Preencha todos os palpites da rodada antes de pagar.", "error");
       }
 
       let payment = getUserPayment(currentUser.id, rodada);
@@ -2338,11 +2475,7 @@
       const myPayments = db.pagamentos.filter(p => p.usuario_id === currentUser.id);
 
       if (myPayments.length === 0) {
-        box.innerHTML = `
-          <div class="empty">
-            Complete todos os palpites de uma rodada para gerar o Pix.
-          </div>
-        `;
+        box.innerHTML = `<div class="empty">Complete todos os palpites de uma rodada para gerar o Pix.</div>`;
         return;
       }
 
@@ -2424,7 +2557,7 @@
                 if (!game) return "";
 
                 const score = calculateGuessPoints(guess, game);
-                const valid = getUserPaymentStatus(currentUser.id, getGameRound(game)) === "aprovado";
+                const valid = payStatus === "aprovado";
 
                 return `
                   <tr>
