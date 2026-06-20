@@ -1,20 +1,11 @@
 # Bolão da Copa Online - Mobile
 
-Versão com visual de app para celular, conectada ao Supabase.
+Versão mobile com visual de app, conectada ao Supabase.
 
-## Recursos
+## Publicação
 
-- Interface mobile com abas inferiores
-- Painel de admin
-- Área do jogador
-- Cadastro de jogos
-- Palpites
-- Pagamento via Pix com QR Code
-- Aprovação manual
-- Ranking
-- Regulamento
+Envie os arquivos para o GitHub e ative o GitHub Pages.
 
-## Publicar no GitHub Pages
+## Observação
 
-Envie `index.html`, `.nojekyll` e este README para o repositório.
-Depois vá em Settings > Pages e publique pela branch main.
+O acesso administrativo não é exibido na tela inicial.
