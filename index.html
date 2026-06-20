@@ -1599,7 +1599,14 @@
       if (!value) return "Sem prazo definido";
       const deadline = new Date(value);
       if (isNaN(deadline)) return "Sem prazo definido";
-      return deadline.toLocaleString("pt-BR");
+      return deadline.toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     }
 
     function getRoundOpenGames(rodada) {
@@ -1635,7 +1642,15 @@
 
     function formatDate(value) {
       const date = new Date(value);
-      return isNaN(date) ? value : date.toLocaleString("pt-BR");
+      if (isNaN(date)) return value;
+      return date.toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     }
 
     function resultType(a, b) {
@@ -1705,6 +1720,33 @@
       });
     }
 
+    function toBrazilIsoFromDatetimeLocal(value) {
+      if (!value) return null;
+      // datetime-local vem como YYYY-MM-DDTHH:mm.
+      // Salva explicitamente no fuso do Brasil para não virar 3 horas a menos.
+      return value.length === 16 ? value + ":00-03:00" : value + "-03:00";
+    }
+
+    function toBrazilDatetimeLocal(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (isNaN(date)) return "";
+
+      // Converte para o horário de Brasília/São Paulo, não para UTC.
+      const parts = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).formatToParts(date);
+
+      const get = type => parts.find(p => p.type === type).value;
+      return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+    }
+
     async function saveGameForm() {
       const editingId = document.getElementById("editingGameId").value;
       if (editingId) {
@@ -1716,7 +1758,8 @@
 
     function getGameFormData() {
       const rodada = document.getElementById("gameRound") ? (document.getElementById("gameRound").value.trim() || "Rodada 1") : "Rodada 1";
-      const data_hora = document.getElementById("gameDate").value;
+      const data_hora_input = document.getElementById("gameDate").value;
+      const data_hora = toBrazilIsoFromDatetimeLocal(data_hora_input);
       const time_a = document.getElementById("teamA").value.trim();
       const time_b = document.getElementById("teamB").value.trim();
 
@@ -1777,7 +1820,7 @@
 
       document.getElementById("editingGameId").value = game.id;
       if (document.getElementById("gameRound")) document.getElementById("gameRound").value = getGameRound(game);
-      document.getElementById("gameDate").value = toDatetimeLocal(game.data_hora);
+      document.getElementById("gameDate").value = toBrazilDatetimeLocal(game.data_hora);
       document.getElementById("teamA").value = game.time_a;
       document.getElementById("teamB").value = game.time_b;
 
@@ -1833,12 +1876,7 @@
     }
 
     function toDatetimeLocal(value) {
-      if (!value) return "";
-      const date = new Date(value);
-      if (isNaN(date)) return "";
-      const offset = date.getTimezoneOffset();
-      const local = new Date(date.getTime() - offset * 60000);
-      return local.toISOString().slice(0, 16);
+      return toBrazilDatetimeLocal(value);
     }
 
     async function deleteGame(gameId) {
@@ -2354,7 +2392,14 @@
             ${renderProgressBar(progress.filled, progress.total)}
             <p class="muted">Jogos: ${games.length}</p>
             <p class="${nextDeadline && new Date() > nextDeadline ? "deadline-closed" : "deadline-ok"}">
-              Próximo encerramento: ${nextDeadline ? nextDeadline.toLocaleString("pt-BR") : "não definido"}
+              Próximo encerramento: ${nextDeadline ? nextDeadline.toLocaleString("pt-BR", {
+                timeZone: "America/Sao_Paulo",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+              }) : "não definido"}
             </p>
             <div class="actions">
               <button class="btn-primary" onclick="goToScreen('player_bets')">Abrir rodada</button>
