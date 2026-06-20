@@ -1,0 +1,4 @@
+PAYMENT_REQUIRED_false: True
+menu_pix_removed: True
+finish_no_payment_insert: True
+ranking_no_approvedRounds: True

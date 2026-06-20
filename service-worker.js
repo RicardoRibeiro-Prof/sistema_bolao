@@ -1,4 +1,4 @@
-const CACHE_NAME = "bolao-copa-teste-sem-pagamento-v5";
+const CACHE_NAME = "bolao-sem-pagamento-real-v6";
 const APP_FILES = [
   "./",
   "./index.html",

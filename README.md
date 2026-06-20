@@ -1,25 +1,20 @@
-# Bolão da Copa - Versão de Teste sem Pagamento
+# Bolão da Copa - TESTE SEM PAGAMENTO
 
-Nesta versão, o pagamento obrigatório foi retirado temporariamente.
+Esta versão realmente remove o pagamento obrigatório do fluxo.
 
-## O que mudou
+## Funcionamento
 
-- Jogador cadastra e faz login normalmente.
-- Jogador preenche todos os palpites da rodada.
-- Ao confirmar a rodada, os palpites já ficam válidos.
+- Jogador cadastra e entra.
+- Preenche todos os palpites da rodada.
+- Clica em Confirmar rodada.
 - Não gera Pix.
-- Não exige aprovação de pagamento.
-- Ranking considera os palpites de todos os jogadores.
+- Não precisa aprovação de pagamento.
+- Os palpites já entram no ranking.
 - Admin lança resultado e o ranking atualiza automaticamente.
 
-## Para voltar com pagamento depois
+## Atenção
 
-No `index.html`, procure:
+Suba TODOS os arquivos no GitHub Pages.
+Depois limpe cache ou gere novamente o APK no PWABuilder.
 
-const PAYMENT_REQUIRED = false;
-
-E altere para:
-
-const PAYMENT_REQUIRED = true;
-
-Depois será necessário reativar o menu Pix e o fluxo de aprovação.
+Se estiver usando APK antigo, desinstale antes de instalar o novo.

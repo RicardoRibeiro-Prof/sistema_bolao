@@ -887,7 +887,7 @@
   <section id="loginPage" class="login-page">
     <div class="login-hero">
       <h1>🏆 Bolão da Copa Online</h1>
-      <p>Entre, registre seu palpite e pague via Pix.</p>
+      <p>Entre, registre seu palpite e confirme via Teste.</p>
       <div class="price-badge">Bolão da Copa</div>
     </div>
 
@@ -987,7 +987,7 @@
             </div>
             <div class="card span-3 stat-card">
               <div class="stat-number" id="statPending">0</div>
-              <div class="stat-label">Pagamentos pendentes</div>
+              <div class="stat-label">Testes pendentes</div>
             </div>
             <div class="card span-3 stat-card">
               <div class="stat-number" id="statGuesses">0</div>
@@ -1019,7 +1019,7 @@
 
         <section id="admin_payments" class="screen">
           <div class="card">
-            <h3>Pagamentos Pix</h3>
+            <h3>Testes Teste</h3>
             
             <div id="paymentsList"></div>
           </div>
@@ -1142,20 +1142,20 @@
         <section id="admin_settings" class="screen">
           <div class="grid">
             <div class="card span-6">
-              <h3>Configuração do Pix</h3>
+              <h3>Configuração do Teste</h3>
               <div class="field">
-                <label for="configPixKey">Chave Pix</label>
-                <input id="configPixKey" placeholder="Digite sua chave Pix" />
+                <label for="configTesteKey">Chave Teste</label>
+                <input id="configTesteKey" placeholder="Digite sua chave Teste" />
               </div>
               <div class="field">
-                <label for="configPixName">Nome do recebedor</label>
-                <input id="configPixName" placeholder="Ex: Ricardo Ribeiro" />
+                <label for="configTesteName">Nome do recebedor</label>
+                <input id="configTesteName" placeholder="Ex: Ricardo Ribeiro" />
               </div>
               <div class="field">
-                <label for="configPixCity">Cidade do recebedor</label>
-                <input id="configPixCity" placeholder="Ex: Sao Raimundo Nonato" />
+                <label for="configTesteCity">Cidade do recebedor</label>
+                <input id="configTesteCity" placeholder="Ex: Sao Raimundo Nonato" />
               </div>
-              <button class="btn-primary" onclick="savePixConfig()">Salvar Pix</button>
+              <button class="btn-primary" onclick="saveTesteConfig()">Salvar Teste</button>
             </div>
 
             <div class="card span-6">
@@ -1183,7 +1183,7 @@
             </div>
 
             <div class="card span-12">
-              <h3>📌 Jogos cadastrados pelo administrador</h3>
+              <h3>📌 Rodadas disponíveis</h3><p class="muted">Fase de teste: não precisa pagamento. Preencha e confirme seus palpites.</p>
               <div id="playerOpenGamesBox"></div>
             </div>
           </div>
@@ -1197,9 +1197,9 @@
           </div>
         </section>
 
-        <section id="player_payment" class="screen">
+        <section id="player_payment" class="screen hidden">
           <div class="card">
-            <h3>Pagamento Pix</h3>
+            <h3>Teste</h3>
             <div id="playerPaymentBox"></div>
           </div>
         </section>
@@ -1260,6 +1260,7 @@
     });
 
     const PRICE = 10;
+    const PAYMENT_REQUIRED = false; // Fase de teste: pagamento/Teste desativado
     const SESSION_KEY = "bolao_copa_supabase_session";
 
     let currentUser = null;
@@ -1274,19 +1275,19 @@
     const adminScreens = {
       admin_dashboard: ["Dashboard", "Resumo do bolão."],
       admin_players: ["Jogadores", "Participantes cadastrados."],
-      admin_payments: ["Pagamentos", "Aprove ou rejeite pagamentos."],
+      admin_payments: ["Testes", "Pagamento desativado na fase de teste."],
       admin_games: ["Jogos", "Cadastre os jogos."],
       admin_results: ["Resultados", "Informe o placar final."],
       admin_guesses: ["Palpites", "Palpites registrados."],
       admin_ranking: ["Ranking", "Classificação geral."],
       admin_regulation: ["Regulamento", "Regras do bolão."],
-      admin_settings: ["Configurações", "Pix e regras."]
+      admin_settings: ["Configurações", "Teste e regras."]
     };
 
     const playerScreens = {
       player_home: ["Início", "Resumo da sua participação."],
       player_bets: ["Palpites", "Registre seus placares."],
-      player_payment: ["Pagamento", "Pague via Pix."],
+      player_payment: ["Teste", "Pague via Teste."],
       player_my_guesses: ["Meus Palpites", "Seus palpites registrados."],
       player_regulation: ["Regulamento", "Regras do bolão."],
       player_ranking: ["Ranking", "Classificação geral."]
@@ -1533,7 +1534,7 @@
         items = [
           ["admin_dashboard", "📊", "Início"],
           ["admin_players", "👤", "Jogadores"],
-          ["admin_payments", "💸", "Pagamentos"],
+          ["admin_payments", "💸", "Testes"],
           ["admin_games", "⚽", "Jogos"],
           ["admin_results", "✅", "Resultados"],
           ["admin_guesses", "📝", "Palpites"],
@@ -1545,7 +1546,7 @@
         items = [
           ["player_home", "🏠", "Início"],
           ["player_bets", "📝", "Palpites"],
-          ["player_payment", "💸", "Pix"],
+          
           ["player_my_guesses", "📋", "Meus"],
           ["player_ranking", "🏅", "Ranking"],
           ["player_regulation", "📜", "Regras"]
@@ -1640,11 +1641,13 @@
     }
 
     function getUserPaymentStatus(userId, rodada = null) {
+      if (!PAYMENT_REQUIRED) return "aprovado";
       const payment = getUserPayment(userId, rodada);
       return payment ? payment.status : "sem_pagamento";
     }
 
     function isUserApproved(userId, rodada = null) {
+      if (!PAYMENT_REQUIRED) return true;
       if (rodada) return getUserPaymentStatus(userId, rodada) === "aprovado";
       return db.pagamentos.some(p => p.usuario_id === userId && p.status === "aprovado");
     }
@@ -1747,14 +1750,7 @@
       const players = db.usuarios.filter(u => u.tipo === "jogador" && isUserApproved(u.id));
 
       return players.map(player => {
-        const approvedRounds = db.pagamentos
-          .filter(p => p.usuario_id === player.id && p.status === "aprovado")
-          .map(p => p.rodada || "Rodada 1");
-
-        const playerGuesses = db.palpites.filter(g => {
-          const game = db.jogos.find(j => j.id === g.jogo_id);
-          return game && approvedRounds.includes(getGameRound(game));
-        });
+        const playerGuesses = db.palpites.filter(g => g.usuario_id === player.id);
         let points = 0;
         let exacts = 0;
         let resultHits = 0;
@@ -2008,7 +2004,7 @@
 
       await fetchAllData();
       render();
-      showMsg("Pagamento aprovado. Jogador validado no ranking.");
+      showMsg("Teste aprovado. Jogador validado no ranking.");
     }
 
     async function rejectPayment(paymentId) {
@@ -2026,7 +2022,7 @@
 
       await fetchAllData();
       render();
-      showMsg("Pagamento rejeitado.");
+      showMsg("Teste rejeitado.");
     }
 
     async function setPaymentPending(paymentId) {
@@ -2041,20 +2037,20 @@
 
       await fetchAllData();
       render();
-      showMsg("Pagamento voltou para pendente.");
+      showMsg("Teste voltou para pendente.");
     }
 
     async function deletePlayer(playerId) {
       alert("Por segurança, usuários do Supabase Auth devem ser excluídos pelo painel do Supabase em Authentication > Users. O app não apaga usuários autenticados pelo navegador.");
     }
 
-    async function savePixConfig() {
-      const chave_pix = document.getElementById("configPixKey").value.trim();
-      const nome_recebedor = document.getElementById("configPixName").value.trim();
-      const cidade_recebedor = document.getElementById("configPixCity").value.trim();
+    async function saveTesteConfig() {
+      const chave_pix = document.getElementById("configTesteKey").value.trim();
+      const nome_recebedor = document.getElementById("configTesteName").value.trim();
+      const cidade_recebedor = document.getElementById("configTesteCity").value.trim();
 
       if (!chave_pix || !nome_recebedor || !cidade_recebedor) {
-        return showMsg("Informe chave Pix, nome e cidade do recebedor.", "error");
+        return showMsg("Informe chave Teste, nome e cidade do recebedor.", "error");
       }
 
       const { error } = await supabaseClient
@@ -2063,12 +2059,12 @@
         .eq("id", 1);
 
       if (error) {
-        return showMsg("Erro ao salvar Pix: " + error.message, "error");
+        return showMsg("Erro ao salvar Teste: " + error.message, "error");
       }
 
       await fetchAllData();
       render();
-      showMsg("Configuração Pix salva.");
+      showMsg("Configuração Teste salva.");
     }
 
     async function saveRegulation() {
@@ -2092,7 +2088,7 @@
       showMsg("Regulamento salvo.");
     }
 
-    function sanitizePixText(value, max) {
+    function sanitizeTesteText(value, max) {
       return (value || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -2122,11 +2118,11 @@
       return crc.toString(16).toUpperCase().padStart(4, "0");
     }
 
-    function generatePixPayload(payment) {
+    function generateTestePayload(payment) {
       const pixKey = db.configuracoes.chave_pix || "configure-sua-chave-pix";
-      const merchantName = sanitizePixText(db.configuracoes.nome_recebedor || "ADMINISTRADOR BOLAO", 25);
-      const merchantCity = sanitizePixText(db.configuracoes.cidade_recebedor || "SAO PAULO", 15);
-      const txid = sanitizePixText(payment.txid || "BOLAO", 25);
+      const merchantName = sanitizeTesteText(db.configuracoes.nome_recebedor || "ADMINISTRADOR BOLAO", 25);
+      const merchantCity = sanitizeTesteText(db.configuracoes.cidade_recebedor || "SAO PAULO", 15);
+      const txid = sanitizeTesteText(payment.txid || "BOLAO", 25);
       const amount = Number(payment.valor || PRICE).toFixed(2);
 
       const gui = emv("00", "br.gov.bcb.pix");
@@ -2150,10 +2146,10 @@
       return payload + crc16(payload);
     }
 
-    function copyPixCode() {
+    function copyTesteCode() {
       const text = document.getElementById("pixCopyCode").value;
       navigator.clipboard.writeText(text).then(() => {
-        showMsg("Código Pix copiado.");
+        showMsg("Código Teste copiado.");
       }).catch(() => {
         alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
       });
@@ -2214,7 +2210,7 @@
               <th>Jogador</th>
               <th>E-mail</th>
               <th>Telefone</th>
-              <th>Pagamento</th>
+              <th>Teste</th>
               <th>Ação</th>
             </tr>
           </thead>
@@ -2340,7 +2336,7 @@
               <th>Jogo</th>
               <th>Palpite</th>
               <th>Resultado</th>
-              <th>Pagamento</th>
+              <th>Teste</th>
               <th>Pontos</th>
             </tr>
           </thead>
@@ -2527,7 +2523,7 @@
 
             <div class="actions">
               <button class="btn-primary" onclick="showRoundReview('${rodada}')" ${paymentStatus === "aprovado" ? "disabled" : ""}>
-                ${allFilled ? "Finalizar rodada" : "Conferir rodada"}
+                ${allFilled ? "Confirmar rodada" : "Conferir rodada"}
               </button>
             </div>
           </div>
@@ -2568,7 +2564,7 @@
           <strong>Confira seus palpites:</strong>
           ${getRoundReviewHtml(rodada)}
           <div class="actions">
-            <button class="btn-primary" onclick="finishRoundAndPay('${rodada}')">Confirmar e gerar Pix</button>
+            <button class="btn-primary" onclick="finishRoundAndPay('${rodada}')">Confirmar rodada</button>
             <button class="btn-muted" onclick="hideRoundReview('${rodada}')">Voltar</button>
           </div>
         </div>
@@ -2633,39 +2629,23 @@
     async function finishRoundAndPay(rodada) {
       const games = db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
 
-      const closedWithoutGuess = games.find(game => isGameDeadlineClosed(game) && !db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id));
+      const closedWithoutGuess = games.find(game =>
+        isGameDeadlineClosed(game) &&
+        !db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)
+      );
+
       if (closedWithoutGuess) {
-        return showMsg("Existe jogo encerrado para palpites sem palpite.", "error");
+        return showMsg("Existe jogo já iniciado sem palpite.", "error");
       }
 
       if (!areAllRoundGuessesFilled(rodada)) {
-        return showMsg("Preencha todos os palpites da rodada antes de pagar.", "error");
-      }
-
-      let payment = getUserPayment(currentUser.id, rodada);
-
-      if (!payment) {
-        const cleanUser = currentUser.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 14);
-        const cleanRound = rodada.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase();
-        const txid = ("BOLAO" + cleanRound + cleanUser).slice(0, 25);
-
-        const payResult = await supabaseClient.from("pagamentos").insert({
-          usuario_id: currentUser.id,
-          valor: Number(db.configuracoes.valor_participacao || PRICE),
-          status: "pendente",
-          txid,
-          rodada
-        });
-
-        if (payResult.error) {
-          return showMsg("Erro ao gerar pagamento: " + payResult.error.message, "error");
-        }
+        return showMsg("Preencha todos os palpites da rodada antes de confirmar.", "error");
       }
 
       await fetchAllData();
       render();
-      showMsg("Rodada completa. Agora faça o pagamento via Pix.");
-      goToScreen("player_payment");
+      showMsg("Rodada confirmada. Palpites válidos para o ranking.");
+      goToScreen("player_my_guesses");
     }
 
     function renderPlayerPayment() {
@@ -2675,12 +2655,12 @@
       const myPayments = db.pagamentos.filter(p => p.usuario_id === currentUser.id);
 
       if (myPayments.length === 0) {
-        box.innerHTML = `<div class="empty">Complete todos os palpites de uma rodada para gerar o Pix.</div>`;
+        box.innerHTML = `<div class="empty">Complete todos os palpites de uma rodada para gerar o Teste.</div>`;
         return;
       }
 
       box.innerHTML = myPayments.map(payment => {
-        const payload = generatePixPayload(payment);
+        const payload = generateTestePayload(payment);
         const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(payload);
         const rodada = payment.rodada || "Rodada 1";
 
@@ -2693,19 +2673,19 @@
 
             <div class="payment-box">
               <div class="qr-card">
-                <img src="${qrUrl}" alt="QR Code Pix">
-                <p class="muted">Escaneie para pagar.</p>
+                <img src="${qrUrl}" alt="QR Code Teste">
+                <p class="muted">Escaneie para confirmar.</p>
                 ${paymentStatusLabel(payment.status)}
               </div>
 
               <div>
-                <h3>Pix Copia e Cola</h3>
+                <h3>Teste Copia e Cola</h3>
                 <p><strong>Recebedor:</strong> ${db.configuracoes.nome_recebedor || "-"}</p>
-                <p><strong>Chave Pix:</strong> ${db.configuracoes.chave_pix || "-"}</p>
+                <p><strong>Chave Teste:</strong> ${db.configuracoes.chave_pix || "-"}</p>
                 <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
                 <textarea id="pixCopyCode_${payment.id}" class="copy-code" readonly>${payload}</textarea>
                 <div class="actions">
-                  <button class="btn-primary" onclick="copyPixCodeById('${payment.id}')">Copiar Pix</button>
+                  <button class="btn-primary" onclick="copyTesteCodeById('${payment.id}')">Copiar Teste</button>
                 </div>
               </div>
             </div>
@@ -2714,11 +2694,11 @@
       }).join("");
     }
 
-    function copyPixCodeById(paymentId) {
+    function copyTesteCodeById(paymentId) {
       const el = document.getElementById("pixCopyCode_" + paymentId);
       if (!el) return;
       navigator.clipboard.writeText(el.value).then(() => {
-        showMsg("Código Pix copiado.");
+        showMsg("Código Teste copiado.");
       }).catch(() => {
         alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
       });
@@ -2775,11 +2755,11 @@
       `;
     }
 
-    function renderPixConfig() {
+    function renderTesteConfig() {
       const c = db.configuracoes || {};
-      document.getElementById("configPixKey").value = c.chave_pix || "";
-      document.getElementById("configPixName").value = c.nome_recebedor || "";
-      document.getElementById("configPixCity").value = c.cidade_recebedor || "";
+      document.getElementById("configTesteKey").value = c.chave_pix || "";
+      document.getElementById("configTesteName").value = c.nome_recebedor || "";
+      document.getElementById("configTesteCity").value = c.cidade_recebedor || "";
     }
 
     function renderRegulation() {
@@ -2806,15 +2786,15 @@
       renderPlayerBetGames();
       renderPlayerPayment();
       renderPlayerMyGuesses();
-      renderPixConfig();
+      renderTesteConfig();
       renderRegulation();
 
       if (currentUser.tipo === "jogador") {
         const hasPending = db.pagamentos.some(p => p.usuario_id === currentUser.id && p.status === "pendente");
         const hasApproved = db.pagamentos.some(p => p.usuario_id === currentUser.id && p.status === "aprovado");
-        document.getElementById("currentPaymentStatus").innerHTML = hasPending ? paymentStatusLabel("pendente") : (hasApproved ? paymentStatusLabel("aprovado") : paymentStatusLabel("sem_pagamento"));
+        document.getElementById("currentPaymentStatus").innerHTML = `<span class="pill finished">Teste sem Pix</span>`;
       } else {
-        document.getElementById("currentPaymentStatus").innerHTML = "";
+        document.getElementById("currentPaymentStatus").innerHTML = `<span class="pill finished">Teste sem Pix</span>`;
       }
     }
 
