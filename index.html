@@ -873,6 +873,10 @@
             <h3>Cadastrar jogo</h3>
             <div class="form-row-3">
               <div>
+                <label for="gameRound">Rodada</label>
+                <input id="gameRound" placeholder="Ex: Rodada 1" />
+              </div>
+              <div>
                 <label for="gameDate">Data e hora</label>
                 <input id="gameDate" type="datetime-local" />
               </div>
@@ -880,9 +884,15 @@
                 <label for="teamA">Time A</label>
                 <input id="teamA" placeholder="Ex: Brasil" />
               </div>
+            </div>
+            <div class="form-row">
               <div>
                 <label for="teamB">Time B</label>
                 <input id="teamB" placeholder="Ex: Argentina" />
+              </div>
+              <div>
+                <label>Pagamento por rodada</label>
+                <input value="O jogador paga após preencher todos os palpites da rodada." disabled />
               </div>
             </div>
             <div class="actions">
@@ -1108,7 +1118,7 @@
 
     const playerScreens = {
       player_home: ["Início", "Resumo da sua participação."],
-      player_bets: ["Palpites", "Registre seus placares."],
+      player_bets: ["Palpites", "Palpites por rodada."],
       player_payment: ["Pagamento", "Pague via Pix."],
       player_my_guesses: ["Meus Palpites", "Seus palpites registrados."],
       player_regulation: ["Regulamento", "Regras do bolão."],
@@ -1385,17 +1395,36 @@
       return `<span class="pill warning">Sem pagamento</span>`;
     }
 
-    function getUserPayment(userId) {
+    function getGameRound(game) {
+      return game && game.rodada ? game.rodada : "Rodada 1";
+    }
+
+    function getRounds() {
+      const rounds = [...new Set(db.jogos.map(g => getGameRound(g)))];
+      return rounds.sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+    }
+
+    function getUserPayment(userId, rodada = null) {
+      if (rodada) {
+        return db.pagamentos.find(p => p.usuario_id === userId && (p.rodada || "Rodada 1") === rodada);
+      }
       return db.pagamentos.find(p => p.usuario_id === userId);
     }
 
-    function getUserPaymentStatus(userId) {
-      const payment = getUserPayment(userId);
+    function getUserPaymentStatus(userId, rodada = null) {
+      const payment = getUserPayment(userId, rodada);
       return payment ? payment.status : "sem_pagamento";
     }
 
-    function isUserApproved(userId) {
-      return getUserPaymentStatus(userId) === "aprovado";
+    function isUserApproved(userId, rodada = null) {
+      if (rodada) return getUserPaymentStatus(userId, rodada) === "aprovado";
+      return db.pagamentos.some(p => p.usuario_id === userId && p.status === "aprovado");
+    }
+
+    function areAllRoundGuessesFilled(rodada) {
+      const games = db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
+      if (games.length === 0) return false;
+      return games.every(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id));
     }
 
     function formatDate(value) {
@@ -1434,7 +1463,14 @@
       const players = db.usuarios.filter(u => u.tipo === "jogador" && isUserApproved(u.id));
 
       return players.map(player => {
-        const playerGuesses = db.palpites.filter(g => g.usuario_id === player.id);
+        const approvedRounds = db.pagamentos
+          .filter(p => p.usuario_id === player.id && p.status === "aprovado")
+          .map(p => p.rodada || "Rodada 1");
+
+        const playerGuesses = db.palpites.filter(g => {
+          const game = db.jogos.find(j => j.id === g.jogo_id);
+          return game && approvedRounds.includes(getGameRound(game));
+        });
         let points = 0;
         let exacts = 0;
         let resultHits = 0;
@@ -1464,6 +1500,7 @@
     }
 
     async function addGame() {
+      const rodada = document.getElementById("gameRound").value.trim() || "Rodada 1";
       const data_hora = document.getElementById("gameDate").value;
       const time_a = document.getElementById("teamA").value.trim();
       const time_b = document.getElementById("teamB").value.trim();
@@ -1477,6 +1514,7 @@
       }
 
       const { error } = await supabaseClient.from("jogos").insert({
+        rodada,
         data_hora,
         time_a,
         time_b,
@@ -1487,6 +1525,7 @@
         return showMsg("Erro ao cadastrar jogo: " + error.message, "error");
       }
 
+      document.getElementById("gameRound").value = "";
       document.getElementById("gameDate").value = "";
       document.getElementById("teamA").value = "";
       document.getElementById("teamB").value = "";
@@ -1544,69 +1583,7 @@
     }
 
     async function savePlayerGuess(gameId) {
-      const aInput = document.getElementById("guessA_" + gameId);
-      const bInput = document.getElementById("guessB_" + gameId);
-
-      const game = db.jogos.find(g => g.id === gameId);
-      if (!game || game.status === "finalizado") {
-        return showMsg("Este jogo está bloqueado para palpites.", "error");
-      }
-
-      if (aInput.value === "" || bInput.value === "") {
-        return showMsg("Informe os dois placares.", "error");
-      }
-
-      const palpite_a = Number(aInput.value);
-      const palpite_b = Number(bInput.value);
-
-      if (Number.isNaN(palpite_a) || Number.isNaN(palpite_b) || palpite_a < 0 || palpite_b < 0) {
-        return showMsg("Informe placares válidos.", "error");
-      }
-
-      const existing = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === gameId);
-
-      let guessError = null;
-
-      if (existing) {
-        const result = await supabaseClient
-          .from("palpites")
-          .update({ palpite_a, palpite_b, atualizado_em: new Date().toISOString() })
-          .eq("id", existing.id);
-        guessError = result.error;
-      } else {
-        const result = await supabaseClient.from("palpites").insert({
-          usuario_id: currentUser.id,
-          jogo_id: gameId,
-          palpite_a,
-          palpite_b
-        });
-        guessError = result.error;
-      }
-
-      if (guessError) {
-        return showMsg("Erro ao salvar palpite: " + guessError.message, "error");
-      }
-
-      let payment = getUserPayment(currentUser.id);
-
-      if (!payment) {
-        const txid = ("BOLAO" + currentUser.id.replace(/[^a-zA-Z0-9]/g, "")).slice(0, 25);
-        const payResult = await supabaseClient.from("pagamentos").insert({
-          usuario_id: currentUser.id,
-          valor: Number(db.configuracoes.valor_participacao || PRICE),
-          status: "pendente",
-          txid
-        });
-
-        if (payResult.error) {
-          return showMsg("Palpite salvo, mas erro ao gerar pagamento: " + payResult.error.message, "error");
-        }
-      }
-
-      await fetchAllData();
-      render();
-      showMsg("Palpite registrado. Agora faça o pagamento via Pix.");
-      goToScreen("player_payment");
+      await saveSingleRoundGuess(gameId);
     }
 
     async function approvePayment(paymentId) {
@@ -1881,6 +1858,7 @@
               ${paymentStatusLabel(payment.status)}
             </div>
             <p><strong>Telefone:</strong> ${player ? player.telefone || "-" : "-"}</p>
+            <p><strong>Rodada:</strong> ${payment.rodada || "Rodada 1"}</p>
             <p><strong>Valor:</strong> R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</p>
             <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
             <p><strong>Palpites registrados:</strong> ${guesses.length}</p>
@@ -1909,7 +1887,7 @@
                 <strong>${game.time_a} x ${game.time_b}</strong>
                 <span class="pill ${game.status === "finalizado" ? "finished" : "open"}">${game.status === "finalizado" ? "Finalizado" : "Aberto"}</span>
               </div>
-              <p class="muted">${formatDate(game.data_hora)}</p>
+              <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
               ${game.status === "finalizado" ? `<p><strong>Resultado:</strong> ${game.resultado_a} x ${game.resultado_b}</p>` : ""}
               <div class="actions">
                 <button class="btn-danger" onclick="deleteGame('${game.id}')">Excluir</button>
@@ -1919,7 +1897,7 @@
       }
 
       const resultOptions = `<option value="">Selecione o jogo</option>` + db.jogos
-        .map(g => `<option value="${g.id}">${formatDate(g.data_hora)} - ${g.time_a} x ${g.time_b} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
+        .map(g => `<option value="${g.id}">${getGameRound(g)} - ${formatDate(g.data_hora)} - ${g.time_a} x ${g.time_b} ${g.status === "finalizado" ? "| " + g.resultado_a + " x " + g.resultado_b : "| Aberto"}</option>`)
         .join("");
 
       document.getElementById("resultGame").innerHTML = resultOptions;
@@ -2035,9 +2013,9 @@
                 <strong>${game.time_a} x ${game.time_b}</strong>
                 <span class="pill ${guess ? "finished" : "warning"}">${guess ? "Palpite feito" : "Disponível"}</span>
               </div>
-              <p class="muted">${formatDate(game.data_hora)}</p>
+              <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
               ${guess ? `<p>Seu palpite: <strong>${guess.palpite_a} x ${guess.palpite_b}</strong></p>` : ""}
-              <p>Pagamento: ${paymentStatusLabel(payStatus)}</p>
+              <p>Pagamento da rodada: ${paymentStatusLabel(getUserPaymentStatus(currentUser.id, getGameRound(game)))}</p>
             </div>
           `;
         }).join("")
@@ -2055,85 +2033,216 @@
         return;
       }
 
-      const payStatus = getUserPaymentStatus(currentUser.id);
+      const rounds = [...new Set(openGames.map(g => getGameRound(g)))].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
 
-      box.innerHTML = `<div class="games-grid">` + openGames.map(game => {
-        const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
+      box.innerHTML = rounds.map(rodada => {
+        const games = openGames.filter(g => getGameRound(g) === rodada);
+        const paymentStatus = getUserPaymentStatus(currentUser.id, rodada);
+        const filled = games.filter(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)).length;
+        const total = games.length;
+        const allFilled = filled === total && total > 0;
 
         return `
-          <div class="player-game">
+          <div class="card" style="margin-bottom:14px;">
             <div class="list-title">
-              <h4>${game.time_a} x ${game.time_b}</h4>
-              <span class="pill ${guess ? "finished" : "open"}">${guess ? "Já registrou" : "Disponível"}</span>
+              <strong>${rodada}</strong>
+              ${paymentStatusLabel(paymentStatus)}
             </div>
-            <p class="muted">${formatDate(game.data_hora)}</p>
-            <p>Pagamento: ${paymentStatusLabel(payStatus)}</p>
+            <p class="muted">${filled}/${total} palpites preenchidos</p>
 
-            <div class="score-row">
-              <div>
-                <label>${game.time_a}</label>
-                <input id="guessA_${game.id}" type="number" min="0" value="${guess ? guess.palpite_a : ""}" placeholder="0" ${payStatus === "aprovado" ? "disabled" : ""} />
-              </div>
-              <div>
-                <label>${game.time_b}</label>
-                <input id="guessB_${game.id}" type="number" min="0" value="${guess ? guess.palpite_b : ""}" placeholder="0" ${payStatus === "aprovado" ? "disabled" : ""} />
-              </div>
+            <div class="games-grid">
+              ${games.map(game => {
+                const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
+                const disabled = paymentStatus === "aprovado";
+
+                return `
+                  <div class="player-game">
+                    <div class="list-title">
+                      <h4>${game.time_a} x ${game.time_b}</h4>
+                      <span class="pill ${guess ? "finished" : "open"}">${guess ? "Preenchido" : "Pendente"}</span>
+                    </div>
+                    <p class="muted">${formatDate(game.data_hora)}</p>
+
+                    <div class="score-row">
+                      <div>
+                        <label>${game.time_a}</label>
+                        <input id="guessA_${game.id}" type="number" min="0" value="${guess ? guess.palpite_a : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
+                      </div>
+                      <div>
+                        <label>${game.time_b}</label>
+                        <input id="guessB_${game.id}" type="number" min="0" value="${guess ? guess.palpite_b : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
+                      </div>
+                    </div>
+
+                    <button class="btn-muted" onclick="saveSingleRoundGuess('${game.id}')" ${disabled ? "disabled" : ""}>
+                      Salvar este palpite
+                    </button>
+                  </div>
+                `;
+              }).join("")}
             </div>
 
-            <button class="btn-primary" onclick="savePlayerGuess('${game.id}')" ${payStatus === "aprovado" ? "disabled" : ""}>
-              ${guess ? "Atualizar e ir para pagamento" : "Registrar palpite"}
-            </button>
+            <div class="actions">
+              <button class="btn-primary" onclick="finishRoundAndPay('${rodada}')" ${paymentStatus === "aprovado" ? "disabled" : ""}>
+                ${allFilled ? "Finalizar rodada e pagar" : "Salvar todos os palpites"}
+              </button>
+            </div>
           </div>
         `;
-      }).join("") + `</div>`;
+      }).join("");
+    }
+
+    async function saveSingleRoundGuess(gameId) {
+      const game = db.jogos.find(g => g.id === gameId);
+      if (!game || game.status === "finalizado") {
+        return showMsg("Este jogo está bloqueado para palpites.", "error");
+      }
+
+      const aInput = document.getElementById("guessA_" + gameId);
+      const bInput = document.getElementById("guessB_" + gameId);
+
+      if (aInput.value === "" || bInput.value === "") {
+        return showMsg("Informe os dois placares.", "error");
+      }
+
+      const palpite_a = Number(aInput.value);
+      const palpite_b = Number(bInput.value);
+
+      if (Number.isNaN(palpite_a) || Number.isNaN(palpite_b) || palpite_a < 0 || palpite_b < 0) {
+        return showMsg("Informe placares válidos.", "error");
+      }
+
+      const existing = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === gameId);
+
+      let result;
+      if (existing) {
+        result = await supabaseClient
+          .from("palpites")
+          .update({ palpite_a, palpite_b, atualizado_em: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        result = await supabaseClient.from("palpites").insert({
+          usuario_id: currentUser.id,
+          jogo_id: gameId,
+          palpite_a,
+          palpite_b
+        });
+      }
+
+      if (result.error) {
+        return showMsg("Erro ao salvar palpite: " + result.error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Palpite salvo.");
+    }
+
+    async function finishRoundAndPay(rodada) {
+      const games = db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
+
+      for (const game of games) {
+        const aInput = document.getElementById("guessA_" + game.id);
+        const bInput = document.getElementById("guessB_" + game.id);
+
+        if (!aInput || !bInput || aInput.value === "" || bInput.value === "") {
+          return showMsg("Preencha todos os palpites da " + rodada + " antes de pagar.", "error");
+        }
+
+        await saveSingleRoundGuess(game.id);
+      }
+
+      await fetchAllData();
+
+      if (!areAllRoundGuessesFilled(rodada)) {
+        render();
+        return showMsg("Ainda falta palpite nessa rodada.", "error");
+      }
+
+      let payment = getUserPayment(currentUser.id, rodada);
+
+      if (!payment) {
+        const cleanUser = currentUser.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 14);
+        const cleanRound = rodada.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase();
+        const txid = ("BOLAO" + cleanRound + cleanUser).slice(0, 25);
+
+        const payResult = await supabaseClient.from("pagamentos").insert({
+          usuario_id: currentUser.id,
+          valor: Number(db.configuracoes.valor_participacao || PRICE),
+          status: "pendente",
+          txid,
+          rodada
+        });
+
+        if (payResult.error) {
+          return showMsg("Erro ao gerar pagamento: " + payResult.error.message, "error");
+        }
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Rodada completa. Agora faça o pagamento via Pix.");
+      goToScreen("player_payment");
     }
 
     function renderPlayerPayment() {
       const box = document.getElementById("playerPaymentBox");
       if (!currentUser || currentUser.tipo !== "jogador") return;
 
-      const payment = getUserPayment(currentUser.id);
-      const myGuesses = db.palpites.filter(g => g.usuario_id === currentUser.id);
+      const myPayments = db.pagamentos.filter(p => p.usuario_id === currentUser.id);
 
-      if (!payment || myGuesses.length === 0) {
+      if (myPayments.length === 0) {
         box.innerHTML = `
           <div class="empty">
-            Você ainda não registrou nenhum palpite. Primeiro vá em <strong>Registrar Palpites</strong>.
+            Complete todos os palpites de uma rodada para gerar o Pix.
           </div>
         `;
         return;
       }
 
-      const payload = generatePixPayload(payment);
-      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(payload);
+      box.innerHTML = myPayments.map(payment => {
+        const payload = generatePixPayload(payment);
+        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(payload);
+        const rodada = payment.rodada || "Rodada 1";
 
-      box.innerHTML = `
-        <div class="highlight-pay">
-          <strong>Pagamento pendente.</strong><br>
-          Faça o Pix de <strong>R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</strong>.
-        </div>
+        return `
+          <div class="card" style="margin-bottom:14px;">
+            <div class="highlight-pay">
+              <strong>${rodada}</strong><br>
+              Valor: <strong>R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</strong>
+            </div>
 
-        <div class="payment-box">
-          <div class="qr-card">
-            <img src="${qrUrl}" alt="QR Code Pix">
-            <p class="muted">Escaneie para pagar.</p>
-            ${paymentStatusLabel(payment.status)}
-          </div>
+            <div class="payment-box">
+              <div class="qr-card">
+                <img src="${qrUrl}" alt="QR Code Pix">
+                <p class="muted">Escaneie para pagar.</p>
+                ${paymentStatusLabel(payment.status)}
+              </div>
 
-          <div>
-            <h3>Pix Copia e Cola</h3>
-            <p><strong>Recebedor:</strong> ${db.configuracoes.nome_recebedor || "-"}</p>
-            <p><strong>Chave Pix:</strong> ${db.configuracoes.chave_pix || "-"}</p>
-            <p><strong>Valor:</strong> R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</p>
-            <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
-            <textarea id="pixCopyCode" class="copy-code" readonly>${payload}</textarea>
-            <div class="actions">
-              <button class="btn-primary" onclick="copyPixCode()">Copiar código Pix</button>
-              <button class="btn-muted" onclick="goToScreen('player_my_guesses')">Ver meus palpites</button>
+              <div>
+                <h3>Pix Copia e Cola</h3>
+                <p><strong>Recebedor:</strong> ${db.configuracoes.nome_recebedor || "-"}</p>
+                <p><strong>Chave Pix:</strong> ${db.configuracoes.chave_pix || "-"}</p>
+                <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
+                <textarea id="pixCopyCode_${payment.id}" class="copy-code" readonly>${payload}</textarea>
+                <div class="actions">
+                  <button class="btn-primary" onclick="copyPixCodeById('${payment.id}')">Copiar Pix</button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
+      }).join("");
+    }
+
+    function copyPixCodeById(paymentId) {
+      const el = document.getElementById("pixCopyCode_" + paymentId);
+      if (!el) return;
+      navigator.clipboard.writeText(el.value).then(() => {
+        showMsg("Código Pix copiado.");
+      }).catch(() => {
+        alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
+      });
     }
 
     function renderPlayerMyGuesses() {
@@ -2169,7 +2278,7 @@
                 if (!game) return "";
 
                 const score = calculateGuessPoints(guess, game);
-                const valid = payStatus === "aprovado";
+                const valid = getUserPaymentStatus(currentUser.id, getGameRound(game)) === "aprovado";
 
                 return `
                   <tr>
@@ -2222,7 +2331,9 @@
       renderRegulation();
 
       if (currentUser.tipo === "jogador") {
-        document.getElementById("currentPaymentStatus").innerHTML = paymentStatusLabel(getUserPaymentStatus(currentUser.id));
+        const hasPending = db.pagamentos.some(p => p.usuario_id === currentUser.id && p.status === "pendente");
+        const hasApproved = db.pagamentos.some(p => p.usuario_id === currentUser.id && p.status === "aprovado");
+        document.getElementById("currentPaymentStatus").innerHTML = hasPending ? paymentStatusLabel("pendente") : (hasApproved ? paymentStatusLabel("aprovado") : paymentStatusLabel("sem_pagamento"));
       } else {
         document.getElementById("currentPaymentStatus").innerHTML = "";
       }

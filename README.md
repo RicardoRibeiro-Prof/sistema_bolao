@@ -1,11 +1,21 @@
-# Bolão da Copa Online - Mobile
+# Bolão da Copa Online - Por Rodada
 
-Versão mobile com visual de app, conectada ao Supabase.
+Nesta versão, o bolão funciona por rodada.
 
-## Publicação
+## Fluxo do jogador
 
-Envie os arquivos para o GitHub e ative o GitHub Pages.
+1. O jogador entra no app.
+2. Abre a aba Palpites.
+3. Preenche todos os jogos da rodada.
+4. Clica em Finalizar rodada e pagar.
+5. O app gera o Pix da rodada.
+6. O admin aprova o pagamento.
+7. A rodada passa a valer no ranking.
 
-## Observação
+## Antes de publicar
 
-O acesso administrativo não é exibido na tela inicial.
+Rode no Supabase o arquivo:
+
+ATUALIZAR-SUPABASE-RODADAS.sql
+
+Depois envie os arquivos para o GitHub Pages.
