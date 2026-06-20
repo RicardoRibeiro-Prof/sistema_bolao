@@ -1,23 +1,13 @@
-# Bolão da Copa - PWA pronto para APK
+# Bolão da Copa - APK com login obrigatório
 
-Esta versão está preparada para virar app Android.
+Esta versão foi ajustada para não manter a sessão salva.
 
-## Arquivos
+## Comportamento
 
-- `index.html`
-- `manifest.json`
-- `service-worker.js`
-- `icons/`
-- `.nojekyll`
-- `COMO-GERAR-APK.txt`
-
-## Como publicar
-
-Suba tudo no GitHub Pages.
-
-Depois use o link do GitHub Pages em um gerador de APK para PWA, como PWABuilder.
+Sempre que o app/APK for aberto, ele mostra a tela de login.
 
 ## Importante
 
-Este app usa Supabase Auth + RLS.  
-Antes de testar, o banco precisa estar configurado corretamente.
+Depois de subir esta versão no GitHub Pages, gere novamente o APK no PWABuilder.
+
+No celular, desinstale o APK antigo antes de instalar o novo para evitar cache antigo.

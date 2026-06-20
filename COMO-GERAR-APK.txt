@@ -1,33 +1,13 @@
-COMO TRANSFORMAR EM APK
+COMO GERAR O APK NOVAMENTE
 
-1. Suba estes arquivos no GitHub Pages:
-   - index.html
-   - manifest.json
-   - service-worker.js
-   - pasta icons
-   - .nojekyll
+1. Suba estes arquivos no GitHub Pages.
+2. Aguarde alguns minutos.
+3. Abra o site no navegador e confira se aparece a tela de login.
+4. Entre no PWABuilder.
+5. Cole o link do GitHub Pages.
+6. Gere o APK novamente.
+7. No celular, desinstale o APK antigo.
+8. Instale o APK novo.
 
-2. Depois de publicado, abra o link do GitHub Pages no navegador.
-
-3. Confirme se o app está funcionando.
-
-4. Para gerar o APK, use uma destas opções:
-
-OPÇÃO MAIS SIMPLES:
-- Acesse https://www.pwabuilder.com/
-- Cole o link do seu GitHub Pages
-- Clique em Start
-- Escolha Android
-- Baixe o pacote APK/AAB gerado
-
-OPÇÃO MAIS PROFISSIONAL:
-- Usar Android Studio + Bubblewrap/TWA
-- Ideal se for publicar na Play Store
-
-OBSERVAÇÃO:
-O APK normalmente será um app que abre seu PWA com aparência de aplicativo.
-Se você atualizar o site no GitHub Pages, o app também recebe as melhorias.
-
-IMPORTANTE:
-O Supabase Auth precisa estar configurado.
-O SQL MIGRACAO-SUPABASE-AUTH-RLS-CORRIGIDA.sql deve ter sido executado.
+Esta versão não salva sessão.
+Ao abrir o app, ele deve pedir e-mail e senha.

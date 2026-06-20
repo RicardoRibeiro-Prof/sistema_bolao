@@ -896,7 +896,7 @@
 
         <div id="loginForm">
           <h2>Entrar</h2>
-          <p>Entre com e-mail e senha.</p>
+          <p>Entre com e-mail e senha para acessar.</p>
 
           <div class="field">
             <label for="loginUser">E-mail</label>
@@ -1247,7 +1247,13 @@
        Nunca usar service_role, secret key ou senha do banco neste arquivo. */
     const SUPABASE_URL = "https://npsirjhnmmmbegxtfnxp.supabase.co";
     const SUPABASE_KEY = "sb_publishable_VRdDWnOZx3TCERRQX3TPBA_Befz_uEl";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
 
     const PRICE = 10;
     const SESSION_KEY = "bolao_copa_supabase_session";
@@ -2814,7 +2820,9 @@
       }
     });
 
-    restoreSession();
+    // Por segurança, o app sempre inicia na tela de login.
+    // A sessão não fica salva entre aberturas do APK/PWA.
+    logout();
   </script>
 
   <script>
