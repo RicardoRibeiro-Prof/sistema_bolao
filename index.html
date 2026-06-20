@@ -1015,7 +1015,8 @@
 
         <section id="admin_games" class="screen">
           <div class="card" style="margin-bottom:18px;">
-            <h3>Cadastrar jogo</h3>
+            <h3 id="gameFormTitle">Cadastrar jogo</h3>
+            <input type="hidden" id="editingGameId" />
             <div class="form-row-3">
               <div>
                 <label for="gameRound">Rodada</label>
@@ -1041,7 +1042,8 @@
               </div>
             </div>
             <div class="actions">
-              <button class="btn-blue" onclick="addGame()">Adicionar jogo</button>
+              <button id="gameSaveButton" class="btn-blue" onclick="saveGameForm()">Adicionar jogo</button>
+              <button id="gameCancelButton" class="btn-muted hidden" onclick="cancelEditGame()">Cancelar edição</button>
             </div>
           </div>
 
@@ -1703,25 +1705,59 @@
       });
     }
 
-    async function addGame() {
+    async function saveGameForm() {
+      const editingId = document.getElementById("editingGameId").value;
+      if (editingId) {
+        await updateGame(editingId);
+      } else {
+        await addGame();
+      }
+    }
+
+    function getGameFormData() {
       const rodada = document.getElementById("gameRound") ? (document.getElementById("gameRound").value.trim() || "Rodada 1") : "Rodada 1";
       const data_hora = document.getElementById("gameDate").value;
       const time_a = document.getElementById("teamA").value.trim();
       const time_b = document.getElementById("teamB").value.trim();
 
-      if (!data_hora || !time_a || !time_b) {
-        return showMsg("Preencha data, time A e time B.", "error");
+      return { rodada, data_hora, time_a, time_b };
+    }
+
+    function validateGameForm(data) {
+      if (!data.data_hora || !data.time_a || !data.time_b) {
+        showMsg("Preencha rodada, data/hora, time A e time B.", "error");
+        return false;
       }
 
-      if (time_a.toLowerCase() === time_b.toLowerCase()) {
-        return showMsg("Os times precisam ser diferentes.", "error");
+      if (data.time_a.toLowerCase() === data.time_b.toLowerCase()) {
+        showMsg("Os times precisam ser diferentes.", "error");
+        return false;
       }
+
+      return true;
+    }
+
+    function clearGameForm() {
+      document.getElementById("editingGameId").value = "";
+      if (document.getElementById("gameRound")) document.getElementById("gameRound").value = "";
+      document.getElementById("gameDate").value = "";
+      document.getElementById("teamA").value = "";
+      document.getElementById("teamB").value = "";
+      document.getElementById("gameFormTitle").textContent = "Cadastrar jogo";
+      document.getElementById("gameSaveButton").textContent = "Adicionar jogo";
+      document.getElementById("gameCancelButton").classList.add("hidden");
+    }
+
+    async function addGame() {
+      const data = getGameFormData();
+
+      if (!validateGameForm(data)) return;
 
       const { error } = await supabaseClient.from("jogos").insert({
-        rodada,
-        data_hora,
-        time_a,
-        time_b,
+        rodada: data.rodada,
+        data_hora: data.data_hora,
+        time_a: data.time_a,
+        time_b: data.time_b,
         status: "aberto"
       });
 
@@ -1729,19 +1765,87 @@
         return showMsg("Erro ao cadastrar jogo: " + error.message, "error");
       }
 
-      if (document.getElementById("gameRound")) document.getElementById("gameRound").value = "";
-      document.getElementById("gameDate").value = "";
-      // Encerramento dos palpites é automático no horário do jogo.
-      document.getElementById("teamA").value = "";
-      document.getElementById("teamB").value = "";
-
+      clearGameForm();
       await fetchAllData();
       render();
-      showMsg("Jogo cadastrado com sucesso. Ele já aparece para os jogadores.");
+      showMsg("Jogo cadastrado com sucesso.");
+    }
+
+    function startEditGame(gameId) {
+      const game = db.jogos.find(g => g.id === gameId);
+      if (!game) return showMsg("Jogo não encontrado.", "error");
+
+      document.getElementById("editingGameId").value = game.id;
+      if (document.getElementById("gameRound")) document.getElementById("gameRound").value = getGameRound(game);
+      document.getElementById("gameDate").value = toDatetimeLocal(game.data_hora);
+      document.getElementById("teamA").value = game.time_a;
+      document.getElementById("teamB").value = game.time_b;
+
+      document.getElementById("gameFormTitle").textContent = "Editar jogo";
+      document.getElementById("gameSaveButton").textContent = "Salvar alterações";
+      document.getElementById("gameCancelButton").classList.remove("hidden");
+
+      goToScreen("admin_games");
+      setTimeout(() => {
+        const formTitle = document.getElementById("gameFormTitle");
+        if (formTitle) formTitle.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+    }
+
+    function cancelEditGame() {
+      clearGameForm();
+      showMsg("Edição cancelada.");
+    }
+
+    async function updateGame(gameId) {
+      const data = getGameFormData();
+
+      if (!validateGameForm(data)) return;
+
+      const game = db.jogos.find(g => g.id === gameId);
+      if (!game) return showMsg("Jogo não encontrado.", "error");
+
+      const hasGuesses = db.palpites.some(p => p.jogo_id === gameId);
+      const text = hasGuesses
+        ? "Este jogo já tem palpites registrados. Alterar times ou horário pode afetar os jogadores. Deseja salvar mesmo assim?"
+        : "Deseja salvar as alterações deste jogo?";
+
+      if (!confirm(text)) return;
+
+      const { error } = await supabaseClient
+        .from("jogos")
+        .update({
+          rodada: data.rodada,
+          data_hora: data.data_hora,
+          time_a: data.time_a,
+          time_b: data.time_b
+        })
+        .eq("id", gameId);
+
+      if (error) {
+        return showMsg("Erro ao atualizar jogo: " + error.message, "error");
+      }
+
+      clearGameForm();
+      await fetchAllData();
+      render();
+      showMsg("Jogo atualizado com sucesso.");
+    }
+
+    function toDatetimeLocal(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (isNaN(date)) return "";
+      const offset = date.getTimezoneOffset();
+      const local = new Date(date.getTime() - offset * 60000);
+      return local.toISOString().slice(0, 16);
     }
 
     async function deleteGame(gameId) {
-      const ok = confirm("Deseja excluir este jogo e todos os palpites ligados a ele?");
+      const hasGuesses = db.palpites.some(p => p.jogo_id === gameId);
+      const ok = confirm(hasGuesses
+        ? "Este jogo tem palpites registrados. Excluir irá remover também os palpites ligados a ele. Deseja continuar?"
+        : "Deseja excluir este jogo?");
       if (!ok) return;
 
       const { error } = await supabaseClient.from("jogos").delete().eq("id", gameId);
@@ -2096,6 +2200,7 @@
               <p class="muted">Encerra: ${formatDeadline(game)}</p>
               ${game.status === "finalizado" ? `<p><strong>Resultado:</strong> ${game.resultado_a} x ${game.resultado_b}</p>` : ""}
               <div class="actions">
+                <button class="btn-blue" onclick="startEditGame('${game.id}')">Editar</button>
                 <button class="btn-danger" onclick="deleteGame('${game.id}')">Excluir</button>
               </div>
             </div>
