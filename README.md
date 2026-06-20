@@ -1,31 +1,25 @@
-# Bolão da Copa - Cadastro e Resultado Melhorados
+# Bolão da Copa - Versão de Teste sem Pagamento
 
-Melhorias desta versão:
+Nesta versão, o pagamento obrigatório foi retirado temporariamente.
 
-- Cadastro com confirmação de senha.
-- Recuperação de senha pela tela de login.
-- Área de resultados mais clara para o administrador.
-- Botão: Salvar resultado e atualizar ranking.
-- Ranking atualiza automaticamente após lançar o resultado.
-- Mantém ícone premium, PWA/APK e Supabase Auth + RLS.
+## O que mudou
 
-## Como atualizar o ranking
+- Jogador cadastra e faz login normalmente.
+- Jogador preenche todos os palpites da rodada.
+- Ao confirmar a rodada, os palpites já ficam válidos.
+- Não gera Pix.
+- Não exige aprovação de pagamento.
+- Ranking considera os palpites de todos os jogadores.
+- Admin lança resultado e o ranking atualiza automaticamente.
 
-No app, entre como admin:
+## Para voltar com pagamento depois
 
-1. Abra a aba **Resultados**.
-2. Escolha o jogo.
-3. Informe o placar final.
-4. Clique em **Salvar resultado e atualizar ranking**.
+No `index.html`, procure:
 
-O sistema finaliza o jogo e recalcula os pontos automaticamente.
+const PAYMENT_REQUIRED = false;
 
-## Recuperação de senha
+E altere para:
 
-Na tela de login, clique em:
+const PAYMENT_REQUIRED = true;
 
-**Esqueci minha senha**
-
-O Supabase enviará um link de recuperação para o e-mail cadastrado.
-
-Atenção: se aparecer limite de e-mail, configure SMTP próprio no Supabase ou aguarde o limite liberar.
+Depois será necessário reativar o menu Pix e o fluxo de aprovação.
