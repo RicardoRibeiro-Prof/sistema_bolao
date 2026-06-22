@@ -2358,20 +2358,6 @@
       }).join("");
     }
 
-      box.innerHTML = rounds.map(rodada => {
-        const totalGames = getRoundGames(rodada).length;
-        const started = countPlayersWithGuessesInRound(rodada);
-        const completed = countPlayersWithCompleteRoundGuesses(rodada);
-
-        return `
-          <div class="round-counter">
-            <strong>${completed}</strong> palpites cadastrados na ${rodada}
-            <span>${started} jogador(es) iniciaram • ${totalGames} jogo(s) nesta rodada</span>
-          </div>
-        `;
-      }).join("");
-    }
-
     function renderAdminDashboard() {
       const players = db.usuarios.filter(u => u.tipo === "jogador");
       document.getElementById("statPlayers").textContent = players.length;
