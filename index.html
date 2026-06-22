@@ -1377,6 +1377,7 @@
       jogos: [],
       palpites: [],
       pagamentos: [],
+      roundSummary: [],
       configuracoes: null
     };
 
@@ -1440,7 +1441,19 @@
       const errors = [usuarios.error, jogos.error, palpites.error, pagamentos.error, configuracoes.error].filter(Boolean);
       if (errors.length) {
         throw new Error(errors[0].message);
+      
+      try {
+        const { data: roundSummaryData, error: roundSummaryError } = await supabaseClient.rpc("resumo_rodadas");
+        if (!roundSummaryError && Array.isArray(roundSummaryData)) {
+          db.roundSummary = roundSummaryData;
+        } else {
+          db.roundSummary = [];
+        }
+      } catch (e) {
+        console.warn("Resumo das rodadas indisponível:", e);
+        db.roundSummary = [];
       }
+    }
 
       db.usuarios = usuarios.data || [];
       db.jogos = jogos.data || [];
@@ -1887,7 +1900,6 @@
     function countPlayersWithCompleteRoundGuesses(rodada) {
       const { games, map } = getRoundGuessMapByUser(rodada);
       if (games.length === 0) return 0;
-
       return Object.values(map).filter(gameSet => gameSet.size >= games.length).length;
     }
 
@@ -1902,16 +1914,31 @@
       return countPlayersWithCompleteRoundGuesses(rodada) * PRICE;
     }
 
-    function renderRoundCounterBadge(rodada) {
+    function getRoundSummary(rodada) {
+      const remote = (db.roundSummary || []).find(r => (r.rodada || "Rodada 1") === rodada);
+      if (remote) {
+        return {
+          started: Number(remote.jogadores_iniciaram || 0),
+          completed: Number(remote.palpites_cadastrados || 0),
+          amount: Number(remote.montante || 0)
+        };
+      }
+
       const started = countPlayersWithGuessesInRound(rodada);
       const completed = countPlayersWithCompleteRoundGuesses(rodada);
-      const amount = getRoundPotAmount(rodada);
+      const amount = completed * PRICE;
+
+      return { started, completed, amount };
+    }
+
+    function renderRoundCounterBadge(rodada) {
+      const summary = getRoundSummary(rodada);
 
       return `
         <div class="round-counter">
-          <div><strong>${completed}</strong> palpites cadastrados na rodada</div>
-          <div class="round-pot">Montante estimado do bolão: <strong>${formatMoneyBR(amount)}</strong></div>
-          <span>${started} jogador(es) iniciaram palpites nesta rodada</span>
+          <div><strong>${summary.completed}</strong> palpites cadastrados na rodada</div>
+          <div class="round-pot">Montante estimado do bolão: <strong>${formatMoneyBR(summary.amount)}</strong></div>
+          <span>${summary.started} jogador(es) iniciaram palpites nesta rodada</span>
         </div>
       `;
     }
