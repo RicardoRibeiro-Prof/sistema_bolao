@@ -868,6 +868,31 @@
         text-align: left;
       }
     }
+  
+    .round-counter {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #14532d;
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin: 10px 0 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .round-counter strong {
+      font-size: 20px;
+      margin-right: 4px;
+    }
+
+    .round-counter span {
+      display: block;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
   </style>
 <meta name="theme-color" content="#07824a">
   <meta name="mobile-web-app-capable" content="yes">
@@ -987,16 +1012,6 @@
         <section id="admin_dashboard" class="screen">
           <div class="grid">
             <div class="card span-3 stat-card">
-              <div class="stat-number" id="adminTotalGuesses">0</div>
-              <div class="stat-label">Palpites cadastrados</div>
-            </div>
-
-            <div class="card span-3 stat-card">
-              <div class="stat-number" id="adminCountedGuesses">0</div>
-              <div class="stat-label">Palpites apurados</div>
-            </div>
-
-            <div class="card span-3 stat-card">
               <div class="stat-number" id="statPlayers">0</div>
               <div class="stat-label">Jogadores</div>
             </div>
@@ -1023,7 +1038,15 @@
               <div id="adminOpenGamesBox"></div>
             </div>
           </div>
-        </section>
+        
+            <div class="card span-12">
+              <h3>Palpites cadastrados por rodada</h3>
+              <p class="muted" style="margin-bottom:12px;">
+                Mostra quantos jogadores já completaram os palpites de cada rodada do bolão.
+              </p>
+              <div id="adminRoundGuessCounters"></div>
+            </div>
+</section>
 
         <section id="admin_players" class="screen">
           <div class="card">
@@ -1192,14 +1215,8 @@
             </div>
             <div class="card span-4 stat-card">
               <div class="stat-number" id="playerGuesses">0</div>
-              <div class="stat-label">Palpites cadastrados</div>
+              <div class="stat-label">Meus palpites</div>
             </div>
-            
-            <div class="card span-4 stat-card">
-              <div class="stat-number" id="playerCountedGuesses">0</div>
-              <div class="stat-label">Palpites apurados</div>
-            </div>
-
             <div class="card span-4 stat-card">
               <div class="stat-number" id="playerPosition">-</div>
               <div class="stat-label">Minha posição</div>
@@ -1230,9 +1247,6 @@
         <section id="player_my_guesses" class="screen">
           <div class="card">
             <h3>Meus palpites</h3>
-            <p class="muted" style="margin-bottom:12px;">
-              Palpites cadastrados são os palpites enviados. Palpites apurados são aqueles que já tiveram resultado lançado pelo administrador.
-            </p>
             <div id="playerMyGuesses"></div>
           </div>
         </section>
@@ -1780,27 +1794,6 @@
       return "E";
     }
 
-    function isGuessCounted(guess) {
-      const game = db.jogos.find(g => g.id === guess.jogo_id);
-      return !!(game && game.status === "finalizado" && game.resultado_a !== null && game.resultado_b !== null && game.resultado_a !== undefined && game.resultado_b !== undefined);
-    }
-
-    function countTotalGuesses() {
-      return db.palpites.length;
-    }
-
-    function countCountedGuesses() {
-      return db.palpites.filter(isGuessCounted).length;
-    }
-
-    function countUserGuesses(userId) {
-      return db.palpites.filter(g => g.usuario_id === userId).length;
-    }
-
-    function countUserCountedGuesses(userId) {
-      return db.palpites.filter(g => g.usuario_id === userId && isGuessCounted(g)).length;
-    }
-
     function calculateGuessPoints(guess, game) {
       // A pontuação só aparece depois que o administrador lança o placar final.
       if (!game || game.status !== "finalizado" || game.resultado_a === null || game.resultado_b === null || game.resultado_a === undefined || game.resultado_b === undefined) {
@@ -1821,6 +1814,42 @@
       }
 
       return { points, exact, resultCorrect };
+    }
+
+    function getRoundGames(rodada) {
+      return db.jogos.filter(g => getGameRound(g) === rodada);
+    }
+
+    function getRoundGuesses(rodada) {
+      const gameIds = getRoundGames(rodada).map(g => g.id);
+      return db.palpites.filter(p => gameIds.includes(p.jogo_id));
+    }
+
+    function countPlayersWithGuessesInRound(rodada) {
+      const userIds = new Set(getRoundGuesses(rodada).map(p => p.usuario_id));
+      return userIds.size;
+    }
+
+    function countPlayersWithCompleteRoundGuesses(rodada) {
+      const games = getRoundGames(rodada);
+      if (games.length === 0) return 0;
+
+      const players = db.usuarios.filter(u => u.tipo === "jogador");
+      return players.filter(player => {
+        return games.every(game => db.palpites.some(p => p.usuario_id === player.id && p.jogo_id === game.id));
+      }).length;
+    }
+
+    function renderRoundCounterBadge(rodada) {
+      const started = countPlayersWithGuessesInRound(rodada);
+      const completed = countPlayersWithCompleteRoundGuesses(rodada);
+
+      return `
+        <div class="round-counter">
+          <strong>${completed}</strong> palpites cadastrados na rodada
+          <span>${started} jogador(es) iniciaram palpites nesta rodada</span>
+        </div>
+      `;
     }
 
     function buildRanking() {
@@ -2250,12 +2279,32 @@
       });
     }
 
-    function renderAdminDashboard() {
-      const totalGuessesEl = document.getElementById("adminTotalGuesses");
-      const countedGuessesEl = document.getElementById("adminCountedGuesses");
-      if (totalGuessesEl) totalGuessesEl.textContent = countTotalGuesses();
-      if (countedGuessesEl) countedGuessesEl.textContent = countCountedGuesses();
+    function renderAdminRoundGuessCounters() {
+      const box = document.getElementById("adminRoundGuessCounters");
+      if (!box) return;
 
+      const rounds = [...new Set(db.jogos.map(g => getGameRound(g)))].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+
+      if (rounds.length === 0) {
+        box.innerHTML = `<div class="empty">Nenhuma rodada cadastrada ainda.</div>`;
+        return;
+      }
+
+      box.innerHTML = rounds.map(rodada => {
+        const totalGames = getRoundGames(rodada).length;
+        const started = countPlayersWithGuessesInRound(rodada);
+        const completed = countPlayersWithCompleteRoundGuesses(rodada);
+
+        return `
+          <div class="round-counter">
+            <strong>${completed}</strong> palpites cadastrados na ${rodada}
+            <span>${started} jogador(es) iniciaram • ${totalGames} jogo(s) nesta rodada</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderAdminDashboard() {
       const players = db.usuarios.filter(u => u.tipo === "jogador");
       document.getElementById("statPlayers").textContent = players.length;
       document.getElementById("statPending").textContent = db.pagamentos.filter(p => p.status === "pendente").length;
@@ -2485,7 +2534,7 @@
           const me = ranking[pos];
           const div = document.createElement("div");
           div.className = "my-ranking-card";
-          div.innerHTML = `Sua posição<strong>${pos + 1}º lugar • ${me.points} pontos</strong><span class="muted">${me.guesses} palpites cadastrados • ${countUserCountedGuesses(me.userId)} apurados • ${me.exacts} placares exatos • ${me.resultHits} vencedores/empates • ${me.goalHits} gols certos</span>`;
+          div.innerHTML = `Sua posição<strong>${pos + 1}º lugar • ${me.points} pontos</strong><span class="muted">${me.guesses} palpites válidos • ${me.exacts} placares exatos • ${me.resultHits} vencedores/empates • ${me.goalHits} gols certos</span>`;
           card.insertBefore(div, card.querySelector(".table-wrap"));
         }
       }
@@ -2511,9 +2560,7 @@
       const position = ranking.findIndex(r => r.userId === currentUser.id) + 1;
 
       document.getElementById("playerPoints").textContent = me ? me.points : 0;
-      document.getElementById("playerGuesses").textContent = countUserGuesses(currentUser.id);
-      const playerCountedGuessesEl = document.getElementById("playerCountedGuesses");
-      if (playerCountedGuessesEl) playerCountedGuessesEl.textContent = countUserCountedGuesses(currentUser.id);
+      document.getElementById("playerGuesses").textContent = db.palpites.filter(g => g.usuario_id === currentUser.id).length;
       document.getElementById("playerPosition").textContent = position > 0 ? position + "º" : "-";
 
       const openGames = db.jogos.filter(g => g.status === "aberto").sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora));
@@ -2878,6 +2925,7 @@
       if (!currentUser) return;
 
       renderAdminDashboard();
+      renderAdminRoundGuessCounters();
       renderPlayers();
       renderPayments();
       renderGames();
