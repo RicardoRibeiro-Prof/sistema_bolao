@@ -893,6 +893,45 @@
       margin-top: 3px;
     }
 
+  
+    .round-counter {
+      background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+      border: 1px solid #86efac;
+      color: #14532d;
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin: 10px 0 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .round-counter strong {
+      font-size: 20px;
+      margin-right: 4px;
+    }
+
+    .round-counter .round-pot {
+      margin-top: 6px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(22,101,52,.12);
+      border-radius: 12px;
+      padding: 8px 10px;
+      color: #0f5132;
+    }
+
+    .round-counter .round-pot strong {
+      font-size: 18px;
+      color: #064e3b;
+    }
+
+    .round-counter span {
+      display: block;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 6px;
+    }
+
   </style>
 <meta name="theme-color" content="#07824a">
   <meta name="mobile-web-app-capable" content="yes">
@@ -1040,9 +1079,9 @@
           </div>
         
             <div class="card span-12">
-              <h3>Palpites cadastrados por rodada</h3>
+              <h3>Palpites e montante por rodada</h3>
               <p class="muted" style="margin-bottom:12px;">
-                Mostra quantos jogadores já completaram os palpites de cada rodada do bolão.
+                Mostra quantos jogadores completaram os palpites da rodada e o montante estimado do bolão.
               </p>
               <div id="adminRoundGuessCounters"></div>
             </div>
@@ -1840,13 +1879,26 @@
       }).length;
     }
 
+    function formatMoneyBR(value) {
+      return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    function getRoundPotAmount(rodada) {
+      return countPlayersWithCompleteRoundGuesses(rodada) * PRICE;
+    }
+
     function renderRoundCounterBadge(rodada) {
       const started = countPlayersWithGuessesInRound(rodada);
       const completed = countPlayersWithCompleteRoundGuesses(rodada);
+      const amount = getRoundPotAmount(rodada);
 
       return `
         <div class="round-counter">
-          <strong>${completed}</strong> palpites cadastrados na rodada
+          <div><strong>${completed}</strong> palpites cadastrados na rodada</div>
+          <div class="round-pot">Montante estimado: <strong>${formatMoneyBR(amount)}</strong></div>
           <span>${started} jogador(es) iniciaram palpites nesta rodada</span>
         </div>
       `;
@@ -2289,6 +2341,22 @@
         box.innerHTML = `<div class="empty">Nenhuma rodada cadastrada ainda.</div>`;
         return;
       }
+
+      box.innerHTML = rounds.map(rodada => {
+        const totalGames = getRoundGames(rodada).length;
+        const started = countPlayersWithGuessesInRound(rodada);
+        const completed = countPlayersWithCompleteRoundGuesses(rodada);
+        const amount = getRoundPotAmount(rodada);
+
+        return `
+          <div class="round-counter">
+            <div><strong>${completed}</strong> palpites cadastrados na ${rodada}</div>
+            <div class="round-pot">Montante estimado: <strong>${formatMoneyBR(amount)}</strong></div>
+            <span>${started} jogador(es) iniciaram • ${totalGames} jogo(s) nesta rodada</span>
+          </div>
+        `;
+      }).join("");
+    }
 
       box.innerHTML = rounds.map(rodada => {
         const totalGames = getRoundGames(rodada).length;
