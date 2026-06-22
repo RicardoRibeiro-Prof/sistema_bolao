@@ -2138,13 +2138,13 @@
       const resultBInput = document.getElementById("resultB").value;
 
       if (!gameId) return showMsg("Selecione um jogo.", "error");
-      if (resultAInput === "" || resultBInput === "") return showMsg("Informe os dois resultados.", "error");
+      if (resultAInput === "" || resultBInput === "") return showMsg("Informe os dois palpites.", "error");
 
       const resultado_a = Number(resultAInput);
       const resultado_b = Number(resultBInput);
 
       if (Number.isNaN(resultado_a) || Number.isNaN(resultado_b) || resultado_a < 0 || resultado_b < 0) {
-        return showMsg("Informe resultados válidos.", "error");
+        return showMsg("Informe palpites válidos.", "error");
       }
 
       const { error } = await supabaseClient
@@ -2808,14 +2808,14 @@
       const bInput = document.getElementById("guessB_" + gameId);
 
       if (aInput.value === "" || bInput.value === "") {
-        return showMsg("Informe os dois placares.", "error");
+        return showMsg("Informe os dois palpites.", "error");
       }
 
       const palpite_a = Number(aInput.value);
       const palpite_b = Number(bInput.value);
 
       if (Number.isNaN(palpite_a) || Number.isNaN(palpite_b) || palpite_a < 0 || palpite_b < 0) {
-        return showMsg("Informe placares válidos.", "error");
+        return showMsg("Informe palpites válidos.", "error");
       }
 
       const existing = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === gameId);
