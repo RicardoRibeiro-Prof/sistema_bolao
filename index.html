@@ -1864,19 +1864,31 @@
       return db.palpites.filter(p => gameIds.includes(p.jogo_id));
     }
 
+    function getRoundGuessMapByUser(rodada) {
+      const games = getRoundGames(rodada);
+      const gameIds = games.map(g => g.id);
+      const map = {};
+
+      db.palpites
+        .filter(p => gameIds.includes(p.jogo_id))
+        .forEach(p => {
+          if (!map[p.usuario_id]) map[p.usuario_id] = new Set();
+          map[p.usuario_id].add(p.jogo_id);
+        });
+
+      return { games, map };
+    }
+
     function countPlayersWithGuessesInRound(rodada) {
-      const userIds = new Set(getRoundGuesses(rodada).map(p => p.usuario_id));
-      return userIds.size;
+      const { map } = getRoundGuessMapByUser(rodada);
+      return Object.keys(map).length;
     }
 
     function countPlayersWithCompleteRoundGuesses(rodada) {
-      const games = getRoundGames(rodada);
+      const { games, map } = getRoundGuessMapByUser(rodada);
       if (games.length === 0) return 0;
 
-      const players = db.usuarios.filter(u => u.tipo === "jogador");
-      return players.filter(player => {
-        return games.every(game => db.palpites.some(p => p.usuario_id === player.id && p.jogo_id === game.id));
-      }).length;
+      return Object.values(map).filter(gameSet => gameSet.size >= games.length).length;
     }
 
     function formatMoneyBR(value) {
