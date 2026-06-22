@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bolão da Copa Online - Supabase</title>
+  <title>Bolão da Copa Online</title>
+  <meta name="theme-color" content="#07824a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bolão da Copa">
+  <meta name="mobile-web-app-capable" content="yes">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
@@ -18,7 +22,8 @@
       --danger: #d92d20;
       --yellow: #f7c948;
       --orange: #f79009;
-      --shadow: 0 12px 30px rgba(16, 24, 40, .08);
+      --shadow: 0 10px 28px rgba(16, 24, 40, .08);
+      --safe-bottom: env(safe-area-inset-bottom);
     }
 
     * { box-sizing: border-box; }
@@ -28,15 +33,16 @@
       font-family: Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
+      -webkit-font-smoothing: antialiased;
     }
 
     .hidden { display: none !important; }
 
     .login-page {
       min-height: 100vh;
+      background: linear-gradient(160deg, #07824a 0%, #155eef 100%);
       display: grid;
       grid-template-columns: 1.05fr .95fr;
-      background: linear-gradient(135deg, #07824a, #155eef);
     }
 
     .login-hero {
@@ -48,28 +54,30 @@
     }
 
     .login-hero h1 {
-      font-size: 46px;
-      margin: 0 0 14px;
-      line-height: 1.05;
+      font-size: 42px;
+      margin: 0 0 12px;
+      line-height: 1.08;
+      letter-spacing: -.02em;
     }
 
     .login-hero p {
-      font-size: 18px;
-      max-width: 620px;
-      line-height: 1.5;
+      font-size: 17px;
+      max-width: 520px;
+      line-height: 1.4;
       opacity: .92;
+      margin: 0;
     }
 
     .price-badge {
       display: inline-block;
       width: fit-content;
-      margin-top: 20px;
-      padding: 14px 18px;
+      margin-top: 18px;
+      padding: 12px 16px;
       border-radius: 999px;
       background: rgba(255,255,255,.16);
       border: 1px solid rgba(255,255,255,.28);
       font-weight: 900;
-      font-size: 18px;
+      font-size: 15px;
     }
 
     .login-card-wrap {
@@ -85,8 +93,8 @@
       width: 100%;
       max-width: 470px;
       background: white;
-      border-radius: 24px;
-      padding: 28px;
+      border-radius: 28px;
+      padding: 24px;
       box-shadow: 0 18px 55px rgba(0,0,0,.22);
     }
 
@@ -94,7 +102,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       background: #f2f4f7;
       padding: 6px;
       border-radius: 16px;
@@ -114,37 +122,38 @@
     }
 
     .login-card h2 {
-      margin: 0 0 8px;
-      font-size: 27px;
+      margin: 0 0 6px;
+      font-size: 24px;
     }
 
     .login-card p {
-      margin: 0 0 18px;
+      margin: 0 0 16px;
       color: var(--muted);
       line-height: 1.4;
+      font-size: 14px;
     }
 
     label {
       display: block;
       margin-bottom: 7px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       color: #344054;
     }
 
     input, select, textarea {
       width: 100%;
-      padding: 10px 12px;
+      padding: 12px 13px;
       border: 1px solid #d0d5dd;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 15px;
       outline: none;
       background: #fff;
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    input, select { height: 46px; }
-    textarea { min-height: 78px; resize: vertical; }
+    input, select { height: 48px; }
+    textarea { min-height: 90px; resize: vertical; }
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--blue);
@@ -155,9 +164,9 @@
 
     button {
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 12px 16px;
-      min-height: 44px;
+      min-height: 46px;
       font-weight: 900;
       cursor: pointer;
       transition: .18s;
@@ -187,11 +196,11 @@
     .hint-box {
       background: #f8fafc;
       border: 1px solid #e4e7ec;
-      padding: 14px;
+      padding: 12px;
       border-radius: 14px;
-      margin-top: 16px;
+      margin-top: 14px;
       color: #475467;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.45;
     }
 
@@ -199,6 +208,7 @@
       display: grid;
       grid-template-columns: 270px 1fr;
       min-height: 100vh;
+      background: var(--bg);
     }
 
     aside {
@@ -211,6 +221,7 @@
       left: 0;
       top: 0;
       overflow-y: auto;
+      display: block;
     }
 
     .brand {
@@ -266,6 +277,7 @@
     .menu-btn:hover {
       background: rgba(255,255,255,.08);
       color: #fff;
+      transform: none;
     }
 
     .menu-btn.active {
@@ -280,64 +292,66 @@
       color: white;
     }
 
-    .mobile-menu {
-      display: none;
-      width: 100%;
-      padding: 13px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.25);
-      background: #fff;
-      color: #111827;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
+    .mobile-menu { display: none; }
 
     main {
       grid-column: 2;
-      padding: 28px;
       width: 100%;
+      padding: 24px;
+      padding-bottom: 24px;
     }
 
     .content {
-      max-width: 1280px;
+      max-width: 1180px;
       margin: 0 auto;
     }
 
     .hero {
       background: linear-gradient(135deg, var(--green), var(--blue));
-      border-radius: 22px;
       color: white;
-      padding: 26px 30px;
-      margin-bottom: 22px;
-      box-shadow: 0 16px 34px rgba(21, 94, 239, .18);
+      padding: 22px 26px;
+      border-radius: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 12px 26px rgba(16, 24, 40, .14);
     }
 
     .hero h2 {
       margin: 0;
-      font-size: 30px;
+      font-size: 26px;
+      line-height: 1.15;
+      letter-spacing: -.02em;
     }
 
     .hero p {
-      margin: 8px 0 0;
-      font-size: 16px;
-      opacity: .94;
+      margin: 5px 0 0;
+      font-size: 14px;
+      opacity: .9;
     }
 
-    .screen { display: none; }
+    .screen {
+      display: none;
+      animation: fadeIn .18s ease;
+    }
+
     .screen.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 18px;
+      gap: 14px;
       align-items: start;
     }
 
     .card {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px;
+      border-radius: 22px;
+      padding: 18px;
       box-shadow: var(--shadow);
       min-width: 0;
     }
@@ -351,45 +365,47 @@
     .span-12 { grid-column: span 12; }
 
     h3 {
-      margin: 0 0 18px;
-      font-size: 22px;
+      margin: 0 0 14px;
+      font-size: 20px;
+      letter-spacing: -.01em;
     }
 
     .form-row {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 14px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .form-row-3 {
       display: grid;
-      grid-template-columns: 1.1fr 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .score-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
+      gap: 12px;
+      margin-bottom: 12px;
       max-width: 360px;
     }
 
     .actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       margin-top: 10px;
     }
 
     .message {
       display: none;
-      margin-bottom: 18px;
-      padding: 13px 15px;
-      border-radius: 12px;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
       font-weight: 800;
+      font-size: 13px;
     }
 
     .success {
@@ -406,53 +422,59 @@
 
     .muted {
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.35;
     }
 
     .stat-card {
-      min-height: 132px;
+      min-height: 116px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      padding: 16px;
     }
 
     .stat-number {
-      font-size: 38px;
+      font-size: 34px;
       font-weight: 900;
       color: var(--green);
       line-height: 1;
     }
 
     .stat-label {
-      margin-top: 8px;
+      margin-top: 7px;
       color: var(--muted);
       font-weight: 800;
+      font-size: 13px;
+      line-height: 1.2;
     }
 
     .list-card {
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
+      border-radius: 18px;
+      padding: 14px;
       background: #fcfcfd;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .list-title {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 12px;
+      align-items: flex-start;
+      gap: 10px;
       margin-bottom: 8px;
     }
 
-    .list-title strong { font-size: 16px; }
+    .list-title strong {
+      font-size: 15px;
+      line-height: 1.25;
+    }
 
     .pill {
       display: inline-block;
-      padding: 6px 10px;
+      padding: 5px 9px;
       border-radius: 999px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
       white-space: nowrap;
     }
@@ -469,17 +491,19 @@
       background: #f9fafb;
       border: 1px dashed #d0d5dd;
       color: var(--muted);
-      border-radius: 16px;
-      padding: 22px;
+      border-radius: 18px;
+      padding: 18px;
       text-align: center;
-      font-size: 15px;
+      font-size: 14px;
+      line-height: 1.45;
     }
 
     .table-wrap {
       width: 100%;
       overflow-x: auto;
-      border-radius: 16px;
+      border-radius: 18px;
       border: 1px solid var(--border);
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
@@ -490,176 +514,381 @@
     }
 
     th, td {
-      padding: 14px 12px;
+      padding: 12px 10px;
       border-bottom: 1px solid #eaecf0;
       text-align: left;
-      font-size: 15px;
+      font-size: 13px;
       vertical-align: middle;
     }
 
     th {
       background: #f2f4f7;
       color: #344054;
-      font-size: 13px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .02em;
     }
 
     tr.top1 { background: #fffaeb; }
+    tr.me-row { background: #ecfdf3 !important; font-weight: 800; }
 
     .ranking-position {
       font-weight: 900;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .two-columns {
       display: grid;
       grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
-      gap: 18px;
+      gap: 14px;
       align-items: start;
     }
 
     .form-help {
-      margin-top: 14px;
-      padding: 14px;
+      margin-top: 12px;
+      padding: 12px;
       border-radius: 14px;
       background: #f8fafc;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.35;
     }
 
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
 
     .player-game {
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
+      border-radius: 22px;
+      padding: 16px;
       background: white;
       box-shadow: var(--shadow);
     }
 
     .player-game h4 {
-      margin: 0 0 8px;
-      font-size: 18px;
-    }
-
-    .player-game .score-row {
-      max-width: none;
+      margin: 0 0 6px;
+      font-size: 17px;
     }
 
     .payment-box {
       display: grid;
       grid-template-columns: 290px 1fr;
-      gap: 22px;
+      gap: 14px;
       align-items: start;
     }
 
     .qr-card {
       background: #fff;
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
+      border-radius: 22px;
+      padding: 16px;
       text-align: center;
     }
 
     .qr-card img {
-      width: 240px;
-      height: 240px;
+      width: 230px;
+      height: 230px;
       max-width: 100%;
-      border-radius: 12px;
+      border-radius: 14px;
       border: 1px solid var(--border);
       background: white;
     }
 
     .copy-code {
       width: 100%;
-      min-height: 120px;
-      font-size: 13px;
+      min-height: 110px;
+      font-size: 12px;
       color: #344054;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .highlight-pay {
-      padding: 16px;
-      border-radius: 16px;
+      padding: 14px;
+      border-radius: 18px;
       background: #ecfdf3;
       color: #027a48;
       border: 1px solid #abefc6;
       margin-bottom: 14px;
-      line-height: 1.45;
+      line-height: 1.4;
+      font-size: 14px;
     }
 
     .regulation-text {
       white-space: pre-wrap;
-      line-height: 1.65;
+      line-height: 1.6;
       background: #f8fafc;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
+      border-radius: 18px;
+      padding: 16px;
       color: #344054;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     .regulation-editor {
-      min-height: 360px;
+      min-height: 320px;
       line-height: 1.5;
     }
 
-    @media (max-width: 1050px) {
-      .login-page { grid-template-columns: 1fr; }
-      .login-hero { padding: 34px 24px; }
-      .login-hero h1 { font-size: 34px; }
-      .login-card-wrap { padding: 24px; }
+    .progress-wrap { margin: 10px 0 12px; }
 
-      .app { display: block; }
-      aside {
-        position: relative;
-        width: 100%;
-        height: auto;
-        border-radius: 0 0 22px 22px;
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: #eef2f6;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      border-radius: 999px;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .review-item {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .review-score {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .deadline-ok { color: #027a48; font-weight: 800; }
+    .deadline-closed { color: #b42318; font-weight: 800; }
+
+    .my-ranking-card {
+      background: linear-gradient(135deg, #ecfdf3, #eff8ff);
+      border: 1px solid #abefc6;
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .my-ranking-card strong {
+      font-size: 20px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    .mobile-bottom-nav, .more-sheet {
+      display: none;
+    }
+
+    @media (max-width: 759px) {
+      .login-page {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
       }
 
-      nav { display: none; }
-      .mobile-menu { display: block; }
+      .login-hero {
+        padding: 34px 22px 18px;
+      }
 
-      main { padding: 18px; }
-      .content { max-width: 100%; }
+      .login-hero h1 { font-size: 34px; }
 
-      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8 {
+      .login-card-wrap {
+        padding: 0 14px 18px;
+        display: block;
+      }
+
+      .login-card {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .app {
+        display: block;
+      }
+
+      aside {
+        display: none;
+      }
+
+      main {
+        width: 100%;
+        padding: 0;
+        padding-bottom: 92px;
+      }
+
+      .content {
+        max-width: 760px;
+        min-height: 100vh;
+      }
+
+      .hero {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-radius: 0 0 26px 26px;
+        padding: 18px 18px 16px;
+        margin-bottom: 0;
+      }
+
+      .hero::before {
+        content: "🏆 Bolão da Copa";
+        display: block;
+        font-weight: 900;
+        font-size: 13px;
+        opacity: .9;
+        margin-bottom: 8px;
+      }
+
+      .hero h2 { font-size: 24px; }
+
+      .screen {
+        padding: 16px;
+      }
+
+      .span-3, .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 {
         grid-column: span 12;
       }
 
-      .two-columns, .payment-box { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 650px) {
-      .hero { padding: 22px; }
-      .hero h2 { font-size: 24px; }
+      .stat-card {
+        grid-column: span 4;
+        min-height: 108px;
+        padding: 14px;
+      }
 
       .form-row, .form-row-3, .score-row {
         grid-template-columns: 1fr;
         max-width: none;
       }
 
-      .card { padding: 18px; }
-      .games-grid { grid-template-columns: 1fr; }
+      .player-game .score-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .two-columns, .payment-box {
+        grid-template-columns: 1fr;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        min-width: 680px;
+      }
+
+      .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        background: rgba(255, 255, 255, .96);
+        backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border);
+        padding: 8px 8px calc(8px + var(--safe-bottom));
+        display: grid;
+        gap: 6px;
+        box-shadow: 0 -10px 28px rgba(16, 24, 40, .08);
+      }
+
+      .mobile-bottom-nav.admin, .mobile-bottom-nav.player {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .bottom-btn {
+        background: transparent;
+        color: #667085;
+        min-height: 54px;
+        border-radius: 16px;
+        padding: 6px 4px;
+        font-size: 11px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+      }
+
+      .bottom-btn span {
+        font-size: 19px;
+        line-height: 1;
+      }
+
+      .bottom-btn.active {
+        background: #ecfdf3;
+        color: var(--green);
+      }
+
+      .more-sheet {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 84px;
+        z-index: 70;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: 0 18px 45px rgba(16,24,40,.22);
+        padding: 12px;
+        display: none;
+      }
+
+      .more-sheet.active { display: block; }
+
+      .more-sheet button {
+        width: 100%;
+        background: #f8fafc;
+        color: #101828;
+        margin-bottom: 8px;
+        text-align: left;
+      }
     }
   </style>
+<meta name="theme-color" content="#07824a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bolão da Copa">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#07824a">
+  <link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+
 </head>
 <body>
 
   <section id="loginPage" class="login-page">
     <div class="login-hero">
       <h1>🏆 Bolão da Copa Online</h1>
-      <p>
-        Versão conectada ao Supabase. Os dados ficam salvos no banco online, não mais apenas no navegador.
-      </p>
-      <div class="price-badge">Palpite primeiro, Pix depois</div>
+      <p>Entre, registre seu palpite e confirme via Teste.</p>
+      <div class="price-badge">Bolão da Copa</div>
     </div>
 
     <div class="login-card-wrap">
@@ -671,11 +900,11 @@
 
         <div id="loginForm">
           <h2>Entrar</h2>
-          <p>Acesse como administrador ou jogador cadastrado.</p>
+          <p>Entre com e-mail e senha para acessar.</p>
 
           <div class="field">
-            <label for="loginUser">Usuário</label>
-            <input id="loginUser" placeholder="Ex: admin ou joao" />
+            <label for="loginUser">E-mail</label>
+            <input id="loginUser" type="email" placeholder="seuemail@exemplo.com" />
           </div>
 
           <div class="field">
@@ -685,16 +914,12 @@
 
           <button class="btn-primary btn-full" onclick="login()">Entrar</button>
 
-          <div class="hint-box">
-            <strong>Acesso inicial:</strong><br>
-            Usuário: <strong>admin</strong><br>
-            Senha: <strong>1234</strong>
-          </div>
+
         </div>
 
         <div id="registerForm" class="hidden">
           <h2>Cadastro do jogador</h2>
-          <p>Crie seu acesso. O pagamento será solicitado apenas depois do palpite.</p>
+          <p>Crie sua conta com e-mail e senha.</p>
 
           <div class="field">
             <label for="regName">Nome completo</label>
@@ -707,19 +932,24 @@
           </div>
 
           <div class="field">
-            <label for="regUser">Usuário para login</label>
-            <input id="regUser" placeholder="Ex: joao2026" />
+            <label for="regUser">E-mail</label>
+            <input id="regUser" type="email" placeholder="seuemail@exemplo.com" />
           </div>
 
           <div class="field">
             <label for="regPass">Senha</label>
-            <input id="regPass" type="password" placeholder="Crie uma senha" />
+            <input id="regPass" type="password" minlength="6" placeholder="Crie uma senha" />
+          </div>
+
+          <div class="field">
+            <label for="regPassConfirm">Confirmar senha</label>
+            <input id="regPassConfirm" type="password" minlength="6" placeholder="Digite a senha novamente" />
           </div>
 
           <button class="btn-blue btn-full" onclick="registerPlayer()">Cadastrar jogador</button>
 
           <div class="hint-box">
-            Depois do cadastro, entre no sistema, faça o palpite e depois pague via QR Code Pix.
+            Fase de teste: não precisa pagamento. Cadastre-se e registre seus palpites.
           </div>
         </div>
       </div>
@@ -730,7 +960,7 @@
     <aside>
       <div class="brand">
         <h1>🏆 Bolão da Copa</h1>
-        <p>Dados salvos no Supabase.</p>
+        <p>Bolão online</p>
         <div class="user-pill">
           <strong id="currentUserName">Usuário</strong><br>
           <span id="currentUserRole" class="pill admin">Admin</span>
@@ -762,7 +992,7 @@
             </div>
             <div class="card span-3 stat-card">
               <div class="stat-number" id="statPending">0</div>
-              <div class="stat-label">Pagamentos pendentes</div>
+              <div class="stat-label">Testes pendentes</div>
             </div>
             <div class="card span-3 stat-card">
               <div class="stat-number" id="statGuesses">0</div>
@@ -794,20 +1024,31 @@
 
         <section id="admin_payments" class="screen">
           <div class="card">
-            <h3>Pagamentos Pix</h3>
-            <p class="muted">Aprove o pagamento para validar o jogador no ranking.</p>
+            <h3>Testes Teste</h3>
+            
             <div id="paymentsList"></div>
           </div>
         </section>
 
         <section id="admin_games" class="screen">
           <div class="card" style="margin-bottom:18px;">
-            <h3>Cadastrar jogo</h3>
+            <h3 id="gameFormTitle">Cadastrar jogo</h3>
+            <input type="hidden" id="editingGameId" />
             <div class="form-row-3">
               <div>
-                <label for="gameDate">Data e hora</label>
+                <label for="gameRound">Rodada</label>
+                <input id="gameRound" placeholder="Ex: Rodada 1" />
+              </div>
+              <div>
+                <label for="gameDate">Data e hora do jogo</label>
                 <input id="gameDate" type="datetime-local" />
               </div>
+              <div>
+                <label>Encerramento dos palpites</label>
+                <input value="Automático: no horário de início do jogo" disabled />
+              </div>
+            </div>
+            <div class="form-row">
               <div>
                 <label for="teamA">Time A</label>
                 <input id="teamA" placeholder="Ex: Brasil" />
@@ -818,13 +1059,14 @@
               </div>
             </div>
             <div class="actions">
-              <button class="btn-blue" onclick="addGame()">Adicionar jogo</button>
+              <button id="gameSaveButton" class="btn-blue" onclick="saveGameForm()">Adicionar jogo</button>
+              <button id="gameCancelButton" class="btn-muted hidden" onclick="cancelEditGame()">Cancelar edição</button>
             </div>
           </div>
 
           <div class="card">
             <h3>Jogos cadastrados</h3>
-            <p class="muted">Todos os jogos abertos aparecem automaticamente para os jogadores.</p>
+            
             <div id="gamesList"></div>
           </div>
         </section>
@@ -852,9 +1094,7 @@
 
               <button class="btn-blue" onclick="saveResult()">Salvar resultado</button>
 
-              <div class="form-help">
-                Ao salvar o resultado, o ranking é recalculado automaticamente.
-              </div>
+              
             </div>
 
             <div class="card">
@@ -874,6 +1114,7 @@
         <section id="admin_ranking" class="screen">
           <div class="card">
             <h3>Ranking geral</h3>
+            <p class="muted" style="margin-bottom:12px;">Detalhamento por categoria: placares exatos, vencedor/empate e gols certos.</p>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -882,8 +1123,9 @@
                     <th>Jogador</th>
                     <th>Pontos</th>
                     <th>Palpites</th>
-                    <th>Placar exato</th>
-                    <th>Resultado correto</th>
+                    <th>Placares exatos</th>
+                    <th>Vencedor/empate</th>
+                    <th>Gols certos</th>
                   </tr>
                 </thead>
                 <tbody id="rankingBodyAdmin"></tbody>
@@ -895,7 +1137,7 @@
         <section id="admin_regulation" class="screen">
           <div class="card">
             <h3>Editar regulamento</h3>
-            <p class="muted">O texto abaixo será exibido para os jogadores.</p>
+            
             <div class="field">
               <label for="adminRegulationText">Regulamento</label>
               <textarea id="adminRegulationText" class="regulation-editor"></textarea>
@@ -907,30 +1149,27 @@
         <section id="admin_settings" class="screen">
           <div class="grid">
             <div class="card span-6">
-              <h3>Configuração do Pix</h3>
+              <h3>Configuração do Teste</h3>
               <div class="field">
-                <label for="configPixKey">Chave Pix</label>
-                <input id="configPixKey" placeholder="Digite sua chave Pix" />
+                <label for="configTesteKey">Chave Teste</label>
+                <input id="configTesteKey" placeholder="Digite sua chave Teste" />
               </div>
               <div class="field">
-                <label for="configPixName">Nome do recebedor</label>
-                <input id="configPixName" placeholder="Ex: Ricardo Ribeiro" />
+                <label for="configTesteName">Nome do recebedor</label>
+                <input id="configTesteName" placeholder="Ex: Ricardo Ribeiro" />
               </div>
               <div class="field">
-                <label for="configPixCity">Cidade do recebedor</label>
-                <input id="configPixCity" placeholder="Ex: Sao Raimundo Nonato" />
+                <label for="configTesteCity">Cidade do recebedor</label>
+                <input id="configTesteCity" placeholder="Ex: Sao Raimundo Nonato" />
               </div>
-              <button class="btn-primary" onclick="savePixConfig()">Salvar Pix</button>
+              <button class="btn-primary" onclick="saveTesteConfig()">Salvar Teste</button>
             </div>
 
             <div class="card span-6">
-              <h3>Regras</h3>
-              <p><strong>Valor:</strong> R$ 10,00 por jogador.</p>
-              <p><strong>Fluxo:</strong> jogador cadastra, faz palpite, paga via QR Code e aguarda aprovação.</p>
-              <p><strong>Resultados:</strong> o administrador lança manualmente o placar final dos jogos.</p>
+              <h3>Pontuação</h3>
               <p><strong>Placar exato:</strong> 5 pontos.</p>
-              <p><strong>Vencedor ou empate correto:</strong> 3 pontos.</p>
-              <p><strong>Gols corretos de um dos times:</strong> 1 ponto.</p>
+              <p><strong>Vencedor/empate:</strong> 3 pontos.</p>
+              <p><strong>Gol correto:</strong> 1 ponto.</p>
             </div>
           </div>
         </section>
@@ -951,7 +1190,7 @@
             </div>
 
             <div class="card span-12">
-              <h3>📌 Jogos cadastrados pelo administrador</h3>
+              <h3>📌 Rodadas disponíveis</h3><p class="muted">Fase de teste: não precisa pagamento. Preencha e confirme seus palpites.</p>
               <div id="playerOpenGamesBox"></div>
             </div>
           </div>
@@ -960,14 +1199,14 @@
         <section id="player_bets" class="screen">
           <div class="card">
             <h3>Registrar meus palpites</h3>
-            <p class="muted">Escolha o jogo, registre seu palpite e depois faça o pagamento via Pix.</p>
+            
             <div id="playerBetGames"></div>
           </div>
         </section>
 
-        <section id="player_payment" class="screen">
+        <section id="player_payment" class="screen hidden">
           <div class="card">
-            <h3>Pagamento Pix</h3>
+            <h3>Teste</h3>
             <div id="playerPaymentBox"></div>
           </div>
         </section>
@@ -982,7 +1221,7 @@
         <section id="player_regulation" class="screen">
           <div class="card">
             <h3>Regulamento do Bolão</h3>
-            <p class="muted">Leia com atenção antes de registrar seus palpites.</p>
+            
             <div id="playerRegulationText" class="regulation-text"></div>
           </div>
         </section>
@@ -990,6 +1229,7 @@
         <section id="player_ranking" class="screen">
           <div class="card">
             <h3>Ranking geral</h3>
+            <p class="muted" style="margin-bottom:12px;">Detalhamento por categoria: placares exatos, vencedor/empate e gols certos.</p>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -998,8 +1238,9 @@
                     <th>Jogador</th>
                     <th>Pontos</th>
                     <th>Palpites</th>
-                    <th>Placar exato</th>
-                    <th>Resultado correto</th>
+                    <th>Placares exatos</th>
+                    <th>Vencedor/empate</th>
+                    <th>Gols certos</th>
                   </tr>
                 </thead>
                 <tbody id="rankingBodyPlayer"></tbody>
@@ -1009,15 +1250,54 @@
         </section>
       </div>
     </main>
+      <div id="moreSheet" class="more-sheet"></div>
+      <div id="mobileBottomNav" class="mobile-bottom-nav player"></div>
+
   </section>
 
   <script>
+    /* A chave abaixo é publishable/public e pode ficar no front-end.
+       Nunca usar service_role, secret key ou senha do banco neste arquivo. */
     const SUPABASE_URL = "https://npsirjhnmmmbegxtfnxp.supabase.co";
     const SUPABASE_KEY = "sb_publishable_VRdDWnOZx3TCERRQX3TPBA_Befz_uEl";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
+    });
 
     const PRICE = 10;
+    const PAYMENT_REQUIRED = false; // Fase de teste: pagamento/Pix desativado
     const SESSION_KEY = "bolao_copa_supabase_session";
+    const DEFAULT_REGULATION = `REGULAMENTO DO BOLÃO DA COPA — FASE DE TESTE
+
+1. O jogador deve se cadastrar no sistema para participar do bolão.
+
+2. O jogador deve registrar seus palpites antes do início de cada partida.
+
+3. Nesta fase de teste, não haverá cobrança de pagamento para participar.
+
+4. Os palpites confirmados entram automaticamente no ranking, sem necessidade de aprovação de pagamento.
+
+5. Após o início da partida, o palpite não poderá mais ser registrado ou alterado.
+
+6. A pontuação será calculada automaticamente pelo sistema depois que o administrador lançar o placar final da partida.
+
+7. O placar exato vale 5 pontos.
+
+8. Acertar o vencedor ou o empate vale 3 pontos.
+
+9. Acertar a quantidade de gols de um dos times vale 1 ponto.
+
+10. O administrador lançará manualmente os resultados das partidas no sistema.
+
+11. O ranking será atualizado automaticamente após os resultados serem lançados.
+
+12. Em caso de empate na pontuação, ficará melhor colocado o jogador com maior número de acertos.
+
+13. Esta versão é apenas para teste. As regras de pagamento poderão ser ativadas futuramente.`;
 
     let currentUser = null;
     let db = {
@@ -1029,24 +1309,24 @@
     };
 
     const adminScreens = {
-      admin_dashboard: ["Dashboard do Admin", "Controle geral do bolão."],
-      admin_players: ["Jogadores", "Veja todos os jogadores cadastrados."],
-      admin_payments: ["Pagamentos Pix", "Aprove pagamentos gerados após o palpite."],
-      admin_games: ["Jogos", "Cadastre os confrontos da Copa."],
-      admin_results: ["Resultados", "Lance manualmente o placar real dos jogos."],
-      admin_guesses: ["Palpites", "Visualize todos os palpites enviados."],
-      admin_ranking: ["Ranking", "Veja a classificação geral."],
-      admin_regulation: ["Regulamento", "Edite as regras que os jogadores irão visualizar."],
-      admin_settings: ["Configurações", "Configure Pix, regras e administração."]
+      admin_dashboard: ["Dashboard", "Resumo do bolão."],
+      admin_players: ["Jogadores", "Participantes cadastrados."],
+      admin_payments: ["Testes", "Pagamento desativado na fase de teste."],
+      admin_games: ["Jogos", "Cadastre os jogos."],
+      admin_results: ["Resultados", "Informe o placar final."],
+      admin_guesses: ["Palpites", "Palpites registrados."],
+      admin_ranking: ["Ranking", "Classificação geral."],
+      admin_regulation: ["Regulamento", "Regras do bolão."],
+      admin_settings: ["Configurações", "Teste e regras."]
     };
 
     const playerScreens = {
-      player_home: ["Área do Jogador", "Veja sua pontuação e seus próximos palpites."],
-      player_bets: ["Registrar Palpites", "Escolha o jogo, grave o palpite e faça o pagamento."],
-      player_payment: ["Pagamento Pix", "Faça o Pix pelo QR Code gerado."],
-      player_my_guesses: ["Histórico de Palpites", "Acompanhe seus palpites e situação do pagamento."],
-      player_regulation: ["Regulamento", "Leia as regras do bolão antes de participar."],
-      player_ranking: ["Ranking", "Veja sua posição no bolão."]
+      player_home: ["Início", "Resumo da sua participação."],
+      player_bets: ["Palpites", "Registre seus placares."],
+      player_payment: ["Teste", "Pague via Teste."],
+      player_my_guesses: ["Meus Palpites", "Seus palpites registrados."],
+      player_regulation: ["Regulamento", "Regras do bolão."],
+      player_ranking: ["Ranking", "Classificação geral."]
     };
 
     function showMsg(text, type = "success") {
@@ -1078,7 +1358,7 @@
 
     async function fetchAllData() {
       const [usuarios, jogos, palpites, pagamentos, configuracoes] = await Promise.all([
-        supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: true }),
+        supabaseClient.from("perfis").select("id,nome,telefone,email,tipo,criado_em").order("criado_em", { ascending: true }),
         supabaseClient.from("jogos").select("*").order("data_hora", { ascending: true }),
         supabaseClient.from("palpites").select("*").order("criado_em", { ascending: true }),
         supabaseClient.from("pagamentos").select("*").order("criado_em", { ascending: true }),
@@ -1094,44 +1374,58 @@
       db.jogos = jogos.data || [];
       db.palpites = palpites.data || [];
       db.pagamentos = pagamentos.data || [];
+
+      db.jogos = (db.jogos || []).map(j => ({
+        ...j,
+        rodada: j.rodada || "Rodada 1",
+        prazo_palpite: j.prazo_palpite || j.data_hora
+      }));
+
+      db.pagamentos = (db.pagamentos || []).map(p => ({
+        ...p,
+        rodada: p.rodada || "Rodada 1"
+      }));
+
       db.configuracoes = configuracoes.data || {
         id: 1,
         chave_pix: "configure-sua-chave-pix",
         nome_recebedor: "ADMINISTRADOR BOLAO",
         cidade_recebedor: "SAO PAULO",
         valor_participacao: 10,
-        regulamento: "Regulamento ainda não cadastrado."
+        regulamento: DEFAULT_REGULATION
       };
     }
 
     async function registerPlayer() {
       const nome = document.getElementById("regName").value.trim();
       const telefone = document.getElementById("regPhone").value.trim();
-      const usuario = document.getElementById("regUser").value.trim();
+      const email = document.getElementById("regUser").value.trim().toLowerCase();
       const senha = document.getElementById("regPass").value.trim();
 
-      if (!nome || !telefone || !usuario || !senha) {
-        alert("Preencha nome, telefone, usuário e senha.");
+      if (!nome || !telefone || !email || !senha) {
+        alert("Preencha nome, telefone, e-mail e senha.");
         return;
       }
 
-      const exists = await supabaseClient
-        .from("usuarios")
-        .select("id")
-        .eq("usuario", usuario)
-        .maybeSingle();
-
-      if (exists.data) {
-        alert("Esse usuário já existe. Escolha outro.");
+      if (!email.includes("@")) {
+        alert("Informe um e-mail válido.");
         return;
       }
 
-      const { error } = await supabaseClient.from("usuarios").insert({
-        nome,
-        telefone,
-        usuario,
-        senha,
-        tipo: "jogador"
+      if (senha.length < 6) {
+        alert("A senha precisa ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: {
+            nome,
+            telefone
+          }
+        }
       });
 
       if (error) {
@@ -1144,38 +1438,30 @@
       document.getElementById("regUser").value = "";
       document.getElementById("regPass").value = "";
 
-      alert("Cadastro realizado! Agora entre, registre seu palpite e depois faça o Pix pelo QR Code.");
+      alert("Cadastro realizado. Agora entre com seu e-mail e senha.");
       showLoginTab("login");
     }
 
     async function login() {
-      const usuario = document.getElementById("loginUser").value.trim();
+      const email = document.getElementById("loginUser").value.trim().toLowerCase();
       const senha = document.getElementById("loginPass").value.trim();
 
-      if (!usuario || !senha) {
-        alert("Informe usuário e senha.");
+      if (!email || !senha) {
+        alert("Informe e-mail e senha.");
         return;
       }
 
-      const { data, error } = await supabaseClient
-        .from("usuarios")
-        .select("*")
-        .eq("usuario", usuario)
-        .eq("senha", senha)
-        .maybeSingle();
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password: senha
+      });
 
       if (error) {
-        alert("Erro ao entrar: " + error.message);
+        alert("E-mail ou senha inválidos.");
         return;
       }
 
-      if (!data) {
-        alert("Usuário ou senha inválidos.");
-        return;
-      }
-
-      currentUser = data;
-      sessionStorage.setItem(SESSION_KEY, data.id);
+      await loadCurrentUserFromAuth();
 
       document.getElementById("loginUser").value = "";
       document.getElementById("loginPass").value = "";
@@ -1183,23 +1469,71 @@
       await openApp();
     }
 
-    function logout() {
+    async function logout() {
+      await supabaseClient.auth.signOut();
       currentUser = null;
-      sessionStorage.removeItem(SESSION_KEY);
       document.getElementById("appPage").classList.add("hidden");
       document.getElementById("loginPage").classList.remove("hidden");
       document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
     }
 
     async function restoreSession() {
-      const userId = sessionStorage.getItem(SESSION_KEY);
-      if (!userId) return;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return;
 
-      const { data, error } = await supabaseClient.from("usuarios").select("*").eq("id", userId).maybeSingle();
-      if (!error && data) {
-        currentUser = data;
+      await loadCurrentUserFromAuth();
+
+      if (currentUser) {
         await openApp();
       }
+    }
+
+    async function loadCurrentUserFromAuth() {
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+
+      if (userError || !user) {
+        currentUser = null;
+        return;
+      }
+
+      let { data: perfil, error } = await supabaseClient
+        .from("perfis")
+        .select("id,nome,telefone,email,tipo,criado_em")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        alert("Erro ao carregar perfil: " + error.message);
+        currentUser = null;
+        return;
+      }
+
+      if (!perfil) {
+        const nome = user.user_metadata?.nome || user.email;
+        const telefone = user.user_metadata?.telefone || "";
+
+        const insert = await supabaseClient
+          .from("perfis")
+          .insert({
+            id: user.id,
+            nome,
+            telefone,
+            email: user.email,
+            tipo: "jogador"
+          })
+          .select("id,nome,telefone,email,tipo,criado_em")
+          .maybeSingle();
+
+        if (insert.error) {
+          alert("Erro ao criar perfil do usuário: " + insert.error.message);
+          currentUser = null;
+          return;
+        }
+
+        perfil = insert.data;
+      }
+
+      currentUser = perfil;
     }
 
     async function openApp() {
@@ -1227,37 +1561,74 @@
     function buildMenu() {
       const menu = document.getElementById("sideMenu");
       const mobile = document.getElementById("mobileMenu");
+      const bottom = document.getElementById("mobileBottomNav");
+      const sheet = document.getElementById("moreSheet");
 
       let items = [];
 
       if (currentUser.tipo === "admin") {
         items = [
-          ["admin_dashboard", "📊 Dashboard"],
-          ["admin_players", "👤 Jogadores"],
-          ["admin_payments", "💸 Pagamentos Pix"],
-          ["admin_games", "⚽ Jogos"],
-          ["admin_results", "✅ Resultados"],
-          ["admin_guesses", "📝 Palpites"],
-          ["admin_ranking", "🏅 Ranking"],
-          ["admin_regulation", "📜 Regulamento"],
-          ["admin_settings", "⚙️ Configurações"]
+          ["admin_dashboard", "📊", "Início"],
+          ["admin_players", "👤", "Jogadores"],
+          ["admin_payments", "💸", "Testes"],
+          ["admin_games", "⚽", "Jogos"],
+          ["admin_results", "✅", "Resultados"],
+          ["admin_guesses", "📝", "Palpites"],
+          ["admin_ranking", "🏅", "Ranking"],
+          ["admin_regulation", "📜", "Regras"],
+          ["admin_settings", "⚙️", "Config."]
         ];
       } else {
         items = [
-          ["player_home", "🏠 Início"],
-          ["player_bets", "📝 Registrar palpites"],
-          ["player_payment", "💸 Pagamento Pix"],
-          ["player_my_guesses", "📋 Meus palpites"],
-          ["player_regulation", "📜 Regulamento"],
-          ["player_ranking", "🏅 Ranking"]
+          ["player_home", "🏠", "Início"],
+          ["player_bets", "📝", "Palpites"],
+          
+          ["player_my_guesses", "📋", "Meus"],
+          ["player_ranking", "🏅", "Ranking"],
+          ["player_regulation", "📜", "Regras"]
         ];
       }
 
-      menu.innerHTML = items.map(item => `
-        <button class="menu-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">${item[1]}</button>
-      `).join("");
+      if (menu) {
+        menu.innerHTML = items.map(item => `
+          <button class="menu-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">${item[1]} ${item[2]}</button>
+        `).join("");
+      }
 
-      mobile.innerHTML = items.map(item => `<option value="${item[0]}">${item[1]}</option>`).join("");
+      if (mobile) {
+        mobile.innerHTML = items.map(item => `<option value="${item[0]}">${item[1]} ${item[2]}</option>`).join("");
+      }
+
+      if (bottom && sheet) {
+        const mainItems = items.slice(0, 4);
+        const extraItems = items.slice(4);
+
+        bottom.className = "mobile-bottom-nav " + (currentUser.tipo === "admin" ? "admin" : "player");
+
+        bottom.innerHTML = mainItems.map(item => `
+          <button class="bottom-btn" data-screen="${item[0]}" onclick="goToScreen('${item[0]}')">
+            <span>${item[1]}</span>${item[2]}
+          </button>
+        `).join("") + `
+          <button class="bottom-btn" id="moreButton" onclick="toggleMoreSheet()">
+            <span>☰</span>Mais
+          </button>
+        `;
+
+        sheet.innerHTML = extraItems.map(item => `
+          <button onclick="goToScreen('${item[0]}'); closeMoreSheet();">${item[1]} ${item[2]}</button>
+        `).join("") + `<button onclick="logout()">🚪 Sair</button>`;
+      }
+    }
+
+    function toggleMoreSheet() {
+      const sheet = document.getElementById("moreSheet");
+      if (sheet) sheet.classList.toggle("active");
+    }
+
+    function closeMoreSheet() {
+      const sheet = document.getElementById("moreSheet");
+      if (sheet) sheet.classList.remove("active");
     }
 
     function goToScreen(screen) {
@@ -1267,6 +1638,12 @@
       document.querySelectorAll(".menu-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.screen === screen);
       });
+
+      document.querySelectorAll(".bottom-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.screen === screen);
+      });
+
+      closeMoreSheet();
 
       document.getElementById("mobileMenu").value = screen;
 
@@ -1284,22 +1661,98 @@
       return `<span class="pill warning">Sem pagamento</span>`;
     }
 
-    function getUserPayment(userId) {
+    function getGameRound(game) {
+      return game && game.rodada ? game.rodada : "Rodada 1";
+    }
+
+    function getGameDeadline(game) {
+      return game ? game.data_hora : null;
+    }
+
+    function getUserPayment(userId, rodada = null) {
+      if (rodada) {
+        return db.pagamentos.find(p => p.usuario_id === userId && ((p.rodada || "Rodada 1") === rodada));
+      }
       return db.pagamentos.find(p => p.usuario_id === userId);
     }
 
-    function getUserPaymentStatus(userId) {
-      const payment = getUserPayment(userId);
+    function getUserPaymentStatus(userId, rodada = null) {
+      if (!PAYMENT_REQUIRED) return "aprovado";
+      const payment = getUserPayment(userId, rodada);
       return payment ? payment.status : "sem_pagamento";
     }
 
-    function isUserApproved(userId) {
-      return getUserPaymentStatus(userId) === "aprovado";
+    function isUserApproved(userId, rodada = null) {
+      if (!PAYMENT_REQUIRED) return true;
+      if (rodada) return getUserPaymentStatus(userId, rodada) === "aprovado";
+      return db.pagamentos.some(p => p.usuario_id === userId && p.status === "aprovado");
+    }
+
+    function isGameDeadlineClosed(game) {
+      const value = getGameDeadline(game);
+      if (!value) return false;
+      const deadline = new Date(value);
+      if (isNaN(deadline)) return false;
+      return new Date() > deadline;
+    }
+
+    function formatDeadline(game) {
+      const value = getGameDeadline(game);
+      if (!value) return "Sem prazo definido";
+      const deadline = new Date(value);
+      if (isNaN(deadline)) return "Sem prazo definido";
+      return deadline.toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function getRoundOpenGames(rodada) {
+      return db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
+    }
+
+    function getRoundProgress(rodada) {
+      const games = getRoundOpenGames(rodada);
+      const total = games.length;
+      const filled = games.filter(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)).length;
+      const percent = total > 0 ? Math.round((filled / total) * 100) : 0;
+      return { total, filled, percent };
+    }
+
+    function renderProgressBar(filled, total) {
+      const percent = total > 0 ? Math.round((filled / total) * 100) : 0;
+      return `
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>${filled}/${total} palpites</span>
+            <span>${percent}%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+        </div>
+      `;
+    }
+
+    function areAllRoundGuessesFilled(rodada) {
+      const games = db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
+      if (games.length === 0) return false;
+      return games.every(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id));
     }
 
     function formatDate(value) {
       const date = new Date(value);
-      return isNaN(date) ? value : date.toLocaleString("pt-BR");
+      if (isNaN(date)) return value;
+      return date.toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     }
 
     function resultType(a, b) {
@@ -1309,42 +1762,58 @@
     }
 
     function calculateGuessPoints(guess, game) {
-      if (!game || game.status !== "finalizado") {
+      // A pontuação só aparece depois que o administrador lança o placar final.
+      if (!game || game.status !== "finalizado" || game.resultado_a === null || game.resultado_b === null || game.resultado_a === undefined || game.resultado_b === undefined) {
         return { points: 0, exact: false, resultCorrect: false };
       }
 
-      const exact = guess.palpite_a === game.resultado_a && guess.palpite_b === game.resultado_b;
-      const resultCorrect = resultType(guess.palpite_a, guess.palpite_b) === resultType(game.resultado_a, game.resultado_b);
+      const exact = Number(guess.palpite_a) === Number(game.resultado_a) && Number(guess.palpite_b) === Number(game.resultado_b);
+      const resultCorrect = resultType(Number(guess.palpite_a), Number(guess.palpite_b)) === resultType(Number(game.resultado_a), Number(game.resultado_b));
 
       let points = 0;
 
       if (exact) {
-        points += 5;
+        points = 5;
       } else {
         if (resultCorrect) points += 3;
-        if (guess.palpite_a === game.resultado_a) points += 1;
-        if (guess.palpite_b === game.resultado_b) points += 1;
+        if (Number(guess.palpite_a) === Number(game.resultado_a)) points += 1;
+        if (Number(guess.palpite_b) === Number(game.resultado_b)) points += 1;
       }
 
       return { points, exact, resultCorrect };
     }
 
     function buildRanking() {
-      const players = db.usuarios.filter(u => u.tipo === "jogador" && isUserApproved(u.id));
+      const players = db.usuarios.filter(u => u.tipo === "jogador");
 
       return players.map(player => {
         const playerGuesses = db.palpites.filter(g => g.usuario_id === player.id);
+
         let points = 0;
         let exacts = 0;
         let resultHits = 0;
+        let goalHits = 0;
 
         playerGuesses.forEach(guess => {
           const game = db.jogos.find(g => g.id === guess.jogo_id);
           const score = calculateGuessPoints(guess, game);
 
           points += score.points;
-          if (score.exact) exacts++;
-          if (score.resultCorrect && game && game.status === "finalizado") resultHits++;
+
+          if (game && game.status === "finalizado" && game.resultado_a !== null && game.resultado_b !== null && game.resultado_a !== undefined && game.resultado_b !== undefined) {
+            const palpiteA = Number(guess.palpite_a);
+            const palpiteB = Number(guess.palpite_b);
+            const resultadoA = Number(game.resultado_a);
+            const resultadoB = Number(game.resultado_b);
+
+            if (palpiteA === resultadoA && palpiteB === resultadoB) {
+              exacts++;
+            } else {
+              if (resultType(palpiteA, palpiteB) === resultType(resultadoA, resultadoB)) resultHits++;
+              if (palpiteA === resultadoA) goalHits++;
+              if (palpiteB === resultadoB) goalHits++;
+            }
+          }
         });
 
         return {
@@ -1353,32 +1822,99 @@
           points,
           guesses: playerGuesses.length,
           exacts,
-          resultHits
+          resultHits,
+          goalHits
         };
       }).sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
         if (b.exacts !== a.exacts) return b.exacts - a.exacts;
+        if (b.resultHits !== a.resultHits) return b.resultHits - a.resultHits;
+        if (b.goalHits !== a.goalHits) return b.goalHits - a.goalHits;
         return a.name.localeCompare(b.name);
       });
     }
 
-    async function addGame() {
-      const data_hora = document.getElementById("gameDate").value;
+    function toBrazilIsoFromDatetimeLocal(value) {
+      if (!value) return null;
+      // datetime-local vem como YYYY-MM-DDTHH:mm.
+      // Salva explicitamente no fuso do Brasil para não virar 3 horas a menos.
+      return value.length === 16 ? value + ":00-03:00" : value + "-03:00";
+    }
+
+    function toBrazilDatetimeLocal(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (isNaN(date)) return "";
+
+      // Converte para o horário de Brasília/São Paulo, não para UTC.
+      const parts = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).formatToParts(date);
+
+      const get = type => parts.find(p => p.type === type).value;
+      return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+    }
+
+    async function saveGameForm() {
+      const editingId = document.getElementById("editingGameId").value;
+      if (editingId) {
+        await updateGame(editingId);
+      } else {
+        await addGame();
+      }
+    }
+
+    function getGameFormData() {
+      const rodada = document.getElementById("gameRound") ? (document.getElementById("gameRound").value.trim() || "Rodada 1") : "Rodada 1";
+      const data_hora_input = document.getElementById("gameDate").value;
+      const data_hora = toBrazilIsoFromDatetimeLocal(data_hora_input);
       const time_a = document.getElementById("teamA").value.trim();
       const time_b = document.getElementById("teamB").value.trim();
 
-      if (!data_hora || !time_a || !time_b) {
-        return showMsg("Preencha data, time A e time B.", "error");
+      return { rodada, data_hora, time_a, time_b };
+    }
+
+    function validateGameForm(data) {
+      if (!data.data_hora || !data.time_a || !data.time_b) {
+        showMsg("Preencha rodada, data/hora, time A e time B.", "error");
+        return false;
       }
 
-      if (time_a.toLowerCase() === time_b.toLowerCase()) {
-        return showMsg("Os times precisam ser diferentes.", "error");
+      if (data.time_a.toLowerCase() === data.time_b.toLowerCase()) {
+        showMsg("Os times precisam ser diferentes.", "error");
+        return false;
       }
+
+      return true;
+    }
+
+    function clearGameForm() {
+      document.getElementById("editingGameId").value = "";
+      if (document.getElementById("gameRound")) document.getElementById("gameRound").value = "";
+      document.getElementById("gameDate").value = "";
+      document.getElementById("teamA").value = "";
+      document.getElementById("teamB").value = "";
+      document.getElementById("gameFormTitle").textContent = "Cadastrar jogo";
+      document.getElementById("gameSaveButton").textContent = "Adicionar jogo";
+      document.getElementById("gameCancelButton").classList.add("hidden");
+    }
+
+    async function addGame() {
+      const data = getGameFormData();
+
+      if (!validateGameForm(data)) return;
 
       const { error } = await supabaseClient.from("jogos").insert({
-        data_hora,
-        time_a,
-        time_b,
+        rodada: data.rodada,
+        data_hora: data.data_hora,
+        time_a: data.time_a,
+        time_b: data.time_b,
         status: "aberto"
       });
 
@@ -1386,17 +1922,82 @@
         return showMsg("Erro ao cadastrar jogo: " + error.message, "error");
       }
 
-      document.getElementById("gameDate").value = "";
-      document.getElementById("teamA").value = "";
-      document.getElementById("teamB").value = "";
-
+      clearGameForm();
       await fetchAllData();
       render();
-      showMsg("Jogo cadastrado com sucesso. Ele já aparece para os jogadores.");
+      showMsg("Jogo cadastrado com sucesso.");
+    }
+
+    function startEditGame(gameId) {
+      const game = db.jogos.find(g => g.id === gameId);
+      if (!game) return showMsg("Jogo não encontrado.", "error");
+
+      document.getElementById("editingGameId").value = game.id;
+      if (document.getElementById("gameRound")) document.getElementById("gameRound").value = getGameRound(game);
+      document.getElementById("gameDate").value = toBrazilDatetimeLocal(game.data_hora);
+      document.getElementById("teamA").value = game.time_a;
+      document.getElementById("teamB").value = game.time_b;
+
+      document.getElementById("gameFormTitle").textContent = "Editar jogo";
+      document.getElementById("gameSaveButton").textContent = "Salvar alterações";
+      document.getElementById("gameCancelButton").classList.remove("hidden");
+
+      goToScreen("admin_games");
+      setTimeout(() => {
+        const formTitle = document.getElementById("gameFormTitle");
+        if (formTitle) formTitle.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+    }
+
+    function cancelEditGame() {
+      clearGameForm();
+      showMsg("Edição cancelada.");
+    }
+
+    async function updateGame(gameId) {
+      const data = getGameFormData();
+
+      if (!validateGameForm(data)) return;
+
+      const game = db.jogos.find(g => g.id === gameId);
+      if (!game) return showMsg("Jogo não encontrado.", "error");
+
+      const hasGuesses = db.palpites.some(p => p.jogo_id === gameId);
+      const text = hasGuesses
+        ? "Este jogo já tem palpites registrados. Alterar times ou horário pode afetar os jogadores. Deseja salvar mesmo assim?"
+        : "Deseja salvar as alterações deste jogo?";
+
+      if (!confirm(text)) return;
+
+      const { error } = await supabaseClient
+        .from("jogos")
+        .update({
+          rodada: data.rodada,
+          data_hora: data.data_hora,
+          time_a: data.time_a,
+          time_b: data.time_b
+        })
+        .eq("id", gameId);
+
+      if (error) {
+        return showMsg("Erro ao atualizar jogo: " + error.message, "error");
+      }
+
+      clearGameForm();
+      await fetchAllData();
+      render();
+      showMsg("Jogo atualizado com sucesso.");
+    }
+
+    function toDatetimeLocal(value) {
+      return toBrazilDatetimeLocal(value);
     }
 
     async function deleteGame(gameId) {
-      const ok = confirm("Deseja excluir este jogo e todos os palpites ligados a ele?");
+      const hasGuesses = db.palpites.some(p => p.jogo_id === gameId);
+      const ok = confirm(hasGuesses
+        ? "Este jogo tem palpites registrados. Excluir irá remover também os palpites ligados a ele. Deseja continuar?"
+        : "Deseja excluir este jogo?");
       if (!ok) return;
 
       const { error } = await supabaseClient.from("jogos").delete().eq("id", gameId);
@@ -1443,69 +2044,7 @@
     }
 
     async function savePlayerGuess(gameId) {
-      const aInput = document.getElementById("guessA_" + gameId);
-      const bInput = document.getElementById("guessB_" + gameId);
-
-      const game = db.jogos.find(g => g.id === gameId);
-      if (!game || game.status === "finalizado") {
-        return showMsg("Este jogo está bloqueado para palpites.", "error");
-      }
-
-      if (aInput.value === "" || bInput.value === "") {
-        return showMsg("Informe os dois placares.", "error");
-      }
-
-      const palpite_a = Number(aInput.value);
-      const palpite_b = Number(bInput.value);
-
-      if (Number.isNaN(palpite_a) || Number.isNaN(palpite_b) || palpite_a < 0 || palpite_b < 0) {
-        return showMsg("Informe placares válidos.", "error");
-      }
-
-      const existing = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === gameId);
-
-      let guessError = null;
-
-      if (existing) {
-        const result = await supabaseClient
-          .from("palpites")
-          .update({ palpite_a, palpite_b, atualizado_em: new Date().toISOString() })
-          .eq("id", existing.id);
-        guessError = result.error;
-      } else {
-        const result = await supabaseClient.from("palpites").insert({
-          usuario_id: currentUser.id,
-          jogo_id: gameId,
-          palpite_a,
-          palpite_b
-        });
-        guessError = result.error;
-      }
-
-      if (guessError) {
-        return showMsg("Erro ao salvar palpite: " + guessError.message, "error");
-      }
-
-      let payment = getUserPayment(currentUser.id);
-
-      if (!payment) {
-        const txid = ("BOLAO" + currentUser.id.replace(/[^a-zA-Z0-9]/g, "")).slice(0, 25);
-        const payResult = await supabaseClient.from("pagamentos").insert({
-          usuario_id: currentUser.id,
-          valor: Number(db.configuracoes.valor_participacao || PRICE),
-          status: "pendente",
-          txid
-        });
-
-        if (payResult.error) {
-          return showMsg("Palpite salvo, mas erro ao gerar pagamento: " + payResult.error.message, "error");
-        }
-      }
-
-      await fetchAllData();
-      render();
-      showMsg("Palpite registrado. Agora faça o pagamento via Pix.");
-      goToScreen("player_payment");
+      await saveSingleRoundGuess(gameId);
     }
 
     async function approvePayment(paymentId) {
@@ -1520,7 +2059,7 @@
 
       await fetchAllData();
       render();
-      showMsg("Pagamento aprovado. Jogador validado no ranking.");
+      showMsg("Teste aprovado. Jogador validado no ranking.");
     }
 
     async function rejectPayment(paymentId) {
@@ -1538,7 +2077,7 @@
 
       await fetchAllData();
       render();
-      showMsg("Pagamento rejeitado.");
+      showMsg("Teste rejeitado.");
     }
 
     async function setPaymentPending(paymentId) {
@@ -1553,31 +2092,20 @@
 
       await fetchAllData();
       render();
-      showMsg("Pagamento voltou para pendente.");
+      showMsg("Teste voltou para pendente.");
     }
 
     async function deletePlayer(playerId) {
-      const ok = confirm("Deseja excluir este jogador, pagamento e todos os palpites dele?");
-      if (!ok) return;
-
-      const { error } = await supabaseClient.from("usuarios").delete().eq("id", playerId);
-
-      if (error) {
-        return showMsg("Erro ao excluir jogador: " + error.message, "error");
-      }
-
-      await fetchAllData();
-      render();
-      showMsg("Jogador excluído.");
+      alert("Por segurança, usuários do Supabase Auth devem ser excluídos pelo painel do Supabase em Authentication > Users. O app não apaga usuários autenticados pelo navegador.");
     }
 
-    async function savePixConfig() {
-      const chave_pix = document.getElementById("configPixKey").value.trim();
-      const nome_recebedor = document.getElementById("configPixName").value.trim();
-      const cidade_recebedor = document.getElementById("configPixCity").value.trim();
+    async function saveTesteConfig() {
+      const chave_pix = document.getElementById("configTesteKey").value.trim();
+      const nome_recebedor = document.getElementById("configTesteName").value.trim();
+      const cidade_recebedor = document.getElementById("configTesteCity").value.trim();
 
       if (!chave_pix || !nome_recebedor || !cidade_recebedor) {
-        return showMsg("Informe chave Pix, nome e cidade do recebedor.", "error");
+        return showMsg("Informe chave Teste, nome e cidade do recebedor.", "error");
       }
 
       const { error } = await supabaseClient
@@ -1586,12 +2114,12 @@
         .eq("id", 1);
 
       if (error) {
-        return showMsg("Erro ao salvar Pix: " + error.message, "error");
+        return showMsg("Erro ao salvar Teste: " + error.message, "error");
       }
 
       await fetchAllData();
       render();
-      showMsg("Configuração Pix salva.");
+      showMsg("Configuração Teste salva.");
     }
 
     async function saveRegulation() {
@@ -1615,7 +2143,7 @@
       showMsg("Regulamento salvo.");
     }
 
-    function sanitizePixText(value, max) {
+    function sanitizeTesteText(value, max) {
       return (value || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -1645,11 +2173,11 @@
       return crc.toString(16).toUpperCase().padStart(4, "0");
     }
 
-    function generatePixPayload(payment) {
+    function generateTestePayload(payment) {
       const pixKey = db.configuracoes.chave_pix || "configure-sua-chave-pix";
-      const merchantName = sanitizePixText(db.configuracoes.nome_recebedor || "ADMINISTRADOR BOLAO", 25);
-      const merchantCity = sanitizePixText(db.configuracoes.cidade_recebedor || "SAO PAULO", 15);
-      const txid = sanitizePixText(payment.txid || "BOLAO", 25);
+      const merchantName = sanitizeTesteText(db.configuracoes.nome_recebedor || "ADMINISTRADOR BOLAO", 25);
+      const merchantCity = sanitizeTesteText(db.configuracoes.cidade_recebedor || "SAO PAULO", 15);
+      const txid = sanitizeTesteText(payment.txid || "BOLAO", 25);
       const amount = Number(payment.valor || PRICE).toFixed(2);
 
       const gui = emv("00", "br.gov.bcb.pix");
@@ -1673,10 +2201,10 @@
       return payload + crc16(payload);
     }
 
-    function copyPixCode() {
+    function copyTesteCode() {
       const text = document.getElementById("pixCopyCode").value;
       navigator.clipboard.writeText(text).then(() => {
-        showMsg("Código Pix copiado.");
+        showMsg("Código Teste copiado.");
       }).catch(() => {
         alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
       });
@@ -1735,9 +2263,9 @@
           <thead>
             <tr>
               <th>Jogador</th>
-              <th>Usuário</th>
+              <th>E-mail</th>
               <th>Telefone</th>
-              <th>Pagamento</th>
+              <th>Teste</th>
               <th>Ação</th>
             </tr>
           </thead>
@@ -1745,10 +2273,10 @@
             ${players.map(player => `
               <tr>
                 <td><strong>${player.nome}</strong></td>
-                <td>${player.usuario}</td>
+                <td>${player.email || "-"}</td>
                 <td>${player.telefone || "-"}</td>
                 <td>${paymentStatusLabel(getUserPaymentStatus(player.id))}</td>
-                <td><button class="btn-danger" onclick="deletePlayer('${player.id}')">Excluir</button></td>
+                <td><button class="btn-danger" onclick="deletePlayer('${player.id}')">Gerenciar</button></td>
               </tr>
             `).join("")}
           </tbody>
@@ -1780,6 +2308,7 @@
               ${paymentStatusLabel(payment.status)}
             </div>
             <p><strong>Telefone:</strong> ${player ? player.telefone || "-" : "-"}</p>
+            <p><strong>Rodada:</strong> ${payment.rodada || "Rodada 1"}</p>
             <p><strong>Valor:</strong> R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</p>
             <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
             <p><strong>Palpites registrados:</strong> ${guesses.length}</p>
@@ -1808,9 +2337,11 @@
                 <strong>${game.time_a} x ${game.time_b}</strong>
                 <span class="pill ${game.status === "finalizado" ? "finished" : "open"}">${game.status === "finalizado" ? "Finalizado" : "Aberto"}</span>
               </div>
-              <p class="muted">${formatDate(game.data_hora)}</p>
+              <p class="muted">${getGameRound(game)} • ${formatDate(game.data_hora)}</p>
+              <p class="muted">Encerra: ${formatDeadline(game)}</p>
               ${game.status === "finalizado" ? `<p><strong>Resultado:</strong> ${game.resultado_a} x ${game.resultado_b}</p>` : ""}
               <div class="actions">
+                <button class="btn-blue" onclick="startEditGame('${game.id}')">Editar</button>
                 <button class="btn-danger" onclick="deleteGame('${game.id}')">Excluir</button>
               </div>
             </div>
@@ -1860,7 +2391,7 @@
               <th>Jogo</th>
               <th>Palpite</th>
               <th>Resultado</th>
-              <th>Pagamento</th>
+              <th>Teste</th>
               <th>Pontos</th>
             </tr>
           </thead>
@@ -1894,19 +2425,35 @@
       const tbody = document.getElementById(tbodyId);
       const ranking = buildRanking();
 
+      const card = tbody.closest(".card");
+      const old = card ? card.querySelector(".my-ranking-card") : null;
+      if (old) old.remove();
+
       if (ranking.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#667085;">Nenhum jogador aprovado no ranking.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#667085;">Nenhum jogador no ranking ainda.</td></tr>`;
         return;
       }
 
+      if (currentUser && currentUser.tipo === "jogador" && tbodyId === "rankingBodyPlayer" && card) {
+        const pos = ranking.findIndex(item => item.userId === currentUser.id);
+        if (pos >= 0) {
+          const me = ranking[pos];
+          const div = document.createElement("div");
+          div.className = "my-ranking-card";
+          div.innerHTML = `Sua posição<strong>${pos + 1}º lugar • ${me.points} pontos</strong><span class="muted">${me.guesses} palpites válidos • ${me.exacts} placares exatos • ${me.resultHits} vencedores/empates • ${me.goalHits} gols certos</span>`;
+          card.insertBefore(div, card.querySelector(".table-wrap"));
+        }
+      }
+
       tbody.innerHTML = ranking.map((item, index) => `
-        <tr class="${index === 0 ? "top1" : ""}">
+        <tr class="${index === 0 ? "top1" : ""} ${currentUser && item.userId === currentUser.id ? "me-row" : ""}">
           <td class="ranking-position">${index + 1}º</td>
           <td>${index === 0 ? "🥇 " : ""}${item.name}${currentUser && item.userId === currentUser.id ? " <strong>(você)</strong>" : ""}</td>
           <td><strong>${item.points}</strong></td>
           <td>${item.guesses}</td>
           <td>${item.exacts}</td>
           <td>${item.resultHits}</td>
+          <td>${item.goalHits}</td>
         </tr>
       `).join("");
     }
@@ -1922,25 +2469,48 @@
       document.getElementById("playerGuesses").textContent = db.palpites.filter(g => g.usuario_id === currentUser.id).length;
       document.getElementById("playerPosition").textContent = position > 0 ? position + "º" : "-";
 
-      const openGames = db.jogos.filter(g => g.status === "aberto").sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora)).slice(0, 5);
-      const payStatus = getUserPaymentStatus(currentUser.id);
+      const openGames = db.jogos.filter(g => g.status === "aberto").sort((a,b) => new Date(a.data_hora) - new Date(b.data_hora));
 
-      document.getElementById("playerOpenGamesBox").innerHTML = openGames.length
-        ? openGames.map(game => {
-          const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
-          return `
-            <div class="list-card">
-              <div class="list-title">
-                <strong>${game.time_a} x ${game.time_b}</strong>
-                <span class="pill ${guess ? "finished" : "warning"}">${guess ? "Palpite feito" : "Disponível"}</span>
-              </div>
-              <p class="muted">${formatDate(game.data_hora)}</p>
-              ${guess ? `<p>Seu palpite: <strong>${guess.palpite_a} x ${guess.palpite_b}</strong></p>` : ""}
-              <p>Pagamento: ${paymentStatusLabel(payStatus)}</p>
+      if (openGames.length === 0) {
+        document.getElementById("playerOpenGamesBox").innerHTML = `<div class="empty"><strong>Nenhum jogo disponível.</strong><br>Assim que o administrador cadastrar os jogos, eles aparecerão aqui.</div>`;
+        return;
+      }
+
+      const rounds = [...new Set(openGames.map(g => getGameRound(g)))].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+
+      document.getElementById("playerOpenGamesBox").innerHTML = rounds.map(rodada => {
+        const games = openGames.filter(g => getGameRound(g) === rodada);
+        const progress = getRoundProgress(rodada);
+        const payStatus = getUserPaymentStatus(currentUser.id, rodada);
+        const nextDeadline = games
+          .map(g => new Date(getGameDeadline(g)))
+          .filter(d => !isNaN(d))
+          .sort((a, b) => a - b)[0];
+
+        return `
+          <div class="list-card">
+            <div class="list-title">
+              <strong>${rodada}</strong>
+              ${paymentStatusLabel(payStatus)}
             </div>
-          `;
-        }).join("")
-        : `<div class="empty"><strong>Nenhum jogo disponível.</strong><br>Assim que o administrador cadastrar os jogos, eles aparecerão aqui.</div>`;
+            ${renderProgressBar(progress.filled, progress.total)}
+            <p class="muted">Jogos: ${games.length}</p>
+            <p class="${nextDeadline && new Date() > nextDeadline ? "deadline-closed" : "deadline-ok"}">
+              Próximo encerramento: ${nextDeadline ? nextDeadline.toLocaleString("pt-BR", {
+                timeZone: "America/Sao_Paulo",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+              }) : "não definido"}
+            </p>
+            <div class="actions">
+              <button class="btn-primary" onclick="goToScreen('player_bets')">Abrir rodada</button>
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
     function renderPlayerBetGames() {
@@ -1954,86 +2524,240 @@
         return;
       }
 
-      const payStatus = getUserPaymentStatus(currentUser.id);
+      const rounds = [...new Set(openGames.map(g => getGameRound(g)))].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
 
-      box.innerHTML = `<div class="games-grid">` + openGames.map(game => {
-        const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
+      box.innerHTML = rounds.map(rodada => {
+        const games = openGames.filter(g => getGameRound(g) === rodada);
+        const paymentStatus = getUserPaymentStatus(currentUser.id, rodada);
+        const filled = games.filter(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)).length;
+        const total = games.length;
+        const allFilled = filled === total && total > 0;
+        const reviewId = "roundReview_" + rodada.replace(/[^a-zA-Z0-9]/g, "_");
 
         return `
-          <div class="player-game">
+          <div class="card" style="margin-bottom:14px;">
             <div class="list-title">
-              <h4>${game.time_a} x ${game.time_b}</h4>
-              <span class="pill ${guess ? "finished" : "open"}">${guess ? "Já registrou" : "Disponível"}</span>
-            </div>
-            <p class="muted">${formatDate(game.data_hora)}</p>
-            <p>Pagamento: ${paymentStatusLabel(payStatus)}</p>
-
-            <div class="score-row">
-              <div>
-                <label>${game.time_a}</label>
-                <input id="guessA_${game.id}" type="number" min="0" value="${guess ? guess.palpite_a : ""}" placeholder="0" ${payStatus === "aprovado" ? "disabled" : ""} />
-              </div>
-              <div>
-                <label>${game.time_b}</label>
-                <input id="guessB_${game.id}" type="number" min="0" value="${guess ? guess.palpite_b : ""}" placeholder="0" ${payStatus === "aprovado" ? "disabled" : ""} />
-              </div>
+              <strong>${rodada}</strong>
+              ${paymentStatusLabel(paymentStatus)}
             </div>
 
-            <button class="btn-primary" onclick="savePlayerGuess('${game.id}')" ${payStatus === "aprovado" ? "disabled" : ""}>
-              ${guess ? "Atualizar e ir para pagamento" : "Registrar palpite"}
-            </button>
+            ${renderProgressBar(filled, total)}
+
+            <div class="games-grid">
+              ${games.map(game => {
+                const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
+                const deadlineClosed = isGameDeadlineClosed(game);
+                const disabled = paymentStatus === "aprovado" || deadlineClosed;
+
+                return `
+                  <div class="player-game">
+                    <div class="list-title">
+                      <h4>${game.time_a} x ${game.time_b}</h4>
+                      <span class="pill ${guess ? "finished" : "open"}">${guess ? "Preenchido" : "Pendente"}</span>
+                    </div>
+                    <p class="muted">${formatDate(game.data_hora)}</p>
+                    <p class="${deadlineClosed ? "deadline-closed" : "deadline-ok"}">Encerra: ${formatDeadline(game)}</p>
+
+                    <div class="score-row">
+                      <div>
+                        <label>${game.time_a}</label>
+                        <input id="guessA_${game.id}" type="number" min="0" value="${guess ? guess.palpite_a : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
+                      </div>
+                      <div>
+                        <label>${game.time_b}</label>
+                        <input id="guessB_${game.id}" type="number" min="0" value="${guess ? guess.palpite_b : ""}" placeholder="0" ${disabled ? "disabled" : ""} />
+                      </div>
+                    </div>
+
+                    <button class="btn-muted" onclick="saveSingleRoundGuess('${game.id}')" ${disabled ? "disabled" : ""}>Salvar este palpite</button>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+
+            <div id="${reviewId}"></div>
+
+            <div class="actions">
+              <button class="btn-primary" onclick="showRoundReview('${rodada}')" ${paymentStatus === "aprovado" ? "disabled" : ""}>
+                ${allFilled ? "Confirmar rodada" : "Conferir rodada"}
+              </button>
+            </div>
           </div>
         `;
-      }).join("") + `</div>`;
+      }).join("");
+    }
+
+    function getRoundReviewHtml(rodada) {
+      const games = getRoundOpenGames(rodada);
+      return `
+        <div class="review-list">
+          ${games.map(game => {
+            const guess = db.palpites.find(p => p.usuario_id === currentUser.id && p.jogo_id === game.id);
+            return `
+              <div class="review-item">
+                <strong>${game.time_a} x ${game.time_b}</strong>
+                <span class="review-score">${guess ? guess.palpite_a + " x " + guess.palpite_b : "Falta"}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function showRoundReview(rodada) {
+      const progress = getRoundProgress(rodada);
+
+      if (progress.filled < progress.total) {
+        showMsg("Preencha todos os palpites da " + rodada + " antes de finalizar.", "error");
+        return;
+      }
+
+      const box = document.getElementById("roundReview_" + rodada.replace(/[^a-zA-Z0-9]/g, "_"));
+      if (!box) return;
+
+      box.innerHTML = `
+        <div class="form-help">
+          <strong>Confira seus palpites:</strong>
+          ${getRoundReviewHtml(rodada)}
+          <div class="actions">
+            <button class="btn-primary" onclick="finishRoundAndPay('${rodada}')">Confirmar rodada</button>
+            <button class="btn-muted" onclick="hideRoundReview('${rodada}')">Voltar</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function hideRoundReview(rodada) {
+      const box = document.getElementById("roundReview_" + rodada.replace(/[^a-zA-Z0-9]/g, "_"));
+      if (box) box.innerHTML = "";
+    }
+
+    async function saveSingleRoundGuess(gameId) {
+      const game = db.jogos.find(g => g.id === gameId);
+      if (!game || game.status === "finalizado") {
+        return showMsg("Este jogo está bloqueado para palpites.", "error");
+      }
+
+      if (isGameDeadlineClosed(game)) {
+        return showMsg("Os palpites deste jogo já foram encerrados.", "error");
+      }
+
+      const aInput = document.getElementById("guessA_" + gameId);
+      const bInput = document.getElementById("guessB_" + gameId);
+
+      if (aInput.value === "" || bInput.value === "") {
+        return showMsg("Informe os dois placares.", "error");
+      }
+
+      const palpite_a = Number(aInput.value);
+      const palpite_b = Number(bInput.value);
+
+      if (Number.isNaN(palpite_a) || Number.isNaN(palpite_b) || palpite_a < 0 || palpite_b < 0) {
+        return showMsg("Informe placares válidos.", "error");
+      }
+
+      const existing = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === gameId);
+
+      let result;
+      if (existing) {
+        result = await supabaseClient
+          .from("palpites")
+          .update({ palpite_a, palpite_b, atualizado_em: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        result = await supabaseClient.from("palpites").insert({
+          usuario_id: currentUser.id,
+          jogo_id: gameId,
+          palpite_a,
+          palpite_b
+        });
+      }
+
+      if (result.error) {
+        return showMsg("Erro ao salvar palpite: " + result.error.message, "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Palpite salvo.");
+    }
+
+    async function finishRoundAndPay(rodada) {
+      const games = db.jogos.filter(g => g.status === "aberto" && getGameRound(g) === rodada);
+
+      const closedWithoutGuess = games.find(game =>
+        isGameDeadlineClosed(game) &&
+        !db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)
+      );
+
+      if (closedWithoutGuess) {
+        return showMsg("Existe jogo já iniciado sem palpite.", "error");
+      }
+
+      if (!areAllRoundGuessesFilled(rodada)) {
+        return showMsg("Preencha todos os palpites da rodada antes de confirmar.", "error");
+      }
+
+      await fetchAllData();
+      render();
+      showMsg("Rodada confirmada. Palpites válidos para o ranking.");
+      goToScreen("player_my_guesses");
     }
 
     function renderPlayerPayment() {
       const box = document.getElementById("playerPaymentBox");
       if (!currentUser || currentUser.tipo !== "jogador") return;
 
-      const payment = getUserPayment(currentUser.id);
-      const myGuesses = db.palpites.filter(g => g.usuario_id === currentUser.id);
+      const myPayments = db.pagamentos.filter(p => p.usuario_id === currentUser.id);
 
-      if (!payment || myGuesses.length === 0) {
-        box.innerHTML = `
-          <div class="empty">
-            Você ainda não registrou nenhum palpite. Primeiro vá em <strong>Registrar Palpites</strong>.
-          </div>
-        `;
+      if (myPayments.length === 0) {
+        box.innerHTML = `<div class="empty">Complete todos os palpites de uma rodada para gerar o Teste.</div>`;
         return;
       }
 
-      const payload = generatePixPayload(payment);
-      const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(payload);
+      box.innerHTML = myPayments.map(payment => {
+        const payload = generateTestePayload(payment);
+        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(payload);
+        const rodada = payment.rodada || "Rodada 1";
 
-      box.innerHTML = `
-        <div class="highlight-pay">
-          <strong>Palpite registrado com sucesso.</strong><br>
-          Agora faça o Pix de <strong>R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</strong>.
-          Depois, aguarde o administrador aprovar o pagamento.
-        </div>
+        return `
+          <div class="card" style="margin-bottom:14px;">
+            <div class="highlight-pay">
+              <strong>${rodada}</strong><br>
+              Valor: <strong>R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</strong>
+            </div>
 
-        <div class="payment-box">
-          <div class="qr-card">
-            <img src="${qrUrl}" alt="QR Code Pix">
-            <p class="muted">Escaneie o QR Code no aplicativo do seu banco.</p>
-            ${paymentStatusLabel(payment.status)}
-          </div>
+            <div class="payment-box">
+              <div class="qr-card">
+                <img src="${qrUrl}" alt="QR Code Teste">
+                <p class="muted">Escaneie para confirmar.</p>
+                ${paymentStatusLabel(payment.status)}
+              </div>
 
-          <div>
-            <h3>Pix Copia e Cola</h3>
-            <p><strong>Recebedor:</strong> ${db.configuracoes.nome_recebedor || "-"}</p>
-            <p><strong>Chave Pix:</strong> ${db.configuracoes.chave_pix || "-"}</p>
-            <p><strong>Valor:</strong> R$ ${Number(payment.valor || PRICE).toFixed(2).replace(".", ",")}</p>
-            <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
-            <textarea id="pixCopyCode" class="copy-code" readonly>${payload}</textarea>
-            <div class="actions">
-              <button class="btn-primary" onclick="copyPixCode()">Copiar código Pix</button>
-              <button class="btn-muted" onclick="goToScreen('player_my_guesses')">Ver meus palpites</button>
+              <div>
+                <h3>Teste Copia e Cola</h3>
+                <p><strong>Recebedor:</strong> ${db.configuracoes.nome_recebedor || "-"}</p>
+                <p><strong>Chave Teste:</strong> ${db.configuracoes.chave_pix || "-"}</p>
+                <p><strong>TXID:</strong> ${payment.txid || "-"}</p>
+                <textarea id="pixCopyCode_${payment.id}" class="copy-code" readonly>${payload}</textarea>
+                <div class="actions">
+                  <button class="btn-primary" onclick="copyTesteCodeById('${payment.id}')">Copiar Teste</button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
+      }).join("");
+    }
+
+    function copyTesteCodeById(paymentId) {
+      const el = document.getElementById("pixCopyCode_" + paymentId);
+      if (!el) return;
+      navigator.clipboard.writeText(el.value).then(() => {
+        showMsg("Código Teste copiado.");
+      }).catch(() => {
+        alert("Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.");
+      });
     }
 
     function renderPlayerMyGuesses() {
@@ -2087,17 +2811,17 @@
       `;
     }
 
-    function renderPixConfig() {
+    function renderTesteConfig() {
       const c = db.configuracoes || {};
-      document.getElementById("configPixKey").value = c.chave_pix || "";
-      document.getElementById("configPixName").value = c.nome_recebedor || "";
-      document.getElementById("configPixCity").value = c.cidade_recebedor || "";
+      document.getElementById("configTesteKey").value = c.chave_pix || "";
+      document.getElementById("configTesteName").value = c.nome_recebedor || "";
+      document.getElementById("configTesteCity").value = c.cidade_recebedor || "";
     }
 
     function renderRegulation() {
       const adminText = document.getElementById("adminRegulationText");
       const playerText = document.getElementById("playerRegulationText");
-      const text = db.configuracoes && db.configuracoes.regulamento ? db.configuracoes.regulamento : "Regulamento ainda não cadastrado.";
+      const text = db.configuracoes && db.configuracoes.regulamento ? db.configuracoes.regulamento : DEFAULT_REGULATION;
 
       if (adminText) adminText.value = text;
       if (playerText) playerText.textContent = text;
@@ -2118,17 +2842,38 @@
       renderPlayerBetGames();
       renderPlayerPayment();
       renderPlayerMyGuesses();
-      renderPixConfig();
+      renderTesteConfig();
       renderRegulation();
 
       if (currentUser.tipo === "jogador") {
-        document.getElementById("currentPaymentStatus").innerHTML = paymentStatusLabel(getUserPaymentStatus(currentUser.id));
+        const hasPending = db.pagamentos.some(p => p.usuario_id === currentUser.id && p.status === "pendente");
+        const hasApproved = db.pagamentos.some(p => p.usuario_id === currentUser.id && p.status === "aprovado");
+        document.getElementById("currentPaymentStatus").innerHTML = `<span class="pill finished">Teste sem Pix</span>`;
       } else {
-        document.getElementById("currentPaymentStatus").innerHTML = "";
+        document.getElementById("currentPaymentStatus").innerHTML = `<span class="pill finished">Teste sem Pix</span>`;
       }
     }
 
-    restoreSession();
+    supabaseClient.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        currentUser = null;
+      }
+    });
+
+    // Por segurança, o app sempre inicia na tela de login.
+    // A sessão não fica salva entre aberturas do APK/PWA.
+    logout();
   </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(error => {
+          console.log("Service Worker não registrado:", error);
+        });
+      });
+    }
+  </script>
+
 </body>
 </html>
