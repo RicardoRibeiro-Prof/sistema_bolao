@@ -1898,7 +1898,7 @@
       return `
         <div class="round-counter">
           <div><strong>${completed}</strong> palpites cadastrados na rodada</div>
-          <div class="round-pot">Montante estimado: <strong>${formatMoneyBR(amount)}</strong></div>
+          <div class="round-pot">Montante estimado do bolão: <strong>${formatMoneyBR(amount)}</strong></div>
           <span>${started} jogador(es) iniciaram palpites nesta rodada</span>
         </div>
       `;
@@ -2138,13 +2138,13 @@
       const resultBInput = document.getElementById("resultB").value;
 
       if (!gameId) return showMsg("Selecione um jogo.", "error");
-      if (resultAInput === "" || resultBInput === "") return showMsg("Informe os dois palpites.", "error");
+      if (resultAInput === "" || resultBInput === "") return showMsg("Informe os dois resultados.", "error");
 
       const resultado_a = Number(resultAInput);
       const resultado_b = Number(resultBInput);
 
       if (Number.isNaN(resultado_a) || Number.isNaN(resultado_b) || resultado_a < 0 || resultado_b < 0) {
-        return showMsg("Informe palpites válidos.", "error");
+        return showMsg("Informe resultados válidos.", "error");
       }
 
       const { error } = await supabaseClient
@@ -2351,7 +2351,7 @@
         return `
           <div class="round-counter">
             <div><strong>${completed}</strong> palpites cadastrados na ${rodada}</div>
-            <div class="round-pot">Montante estimado: <strong>${formatMoneyBR(amount)}</strong></div>
+            <div class="round-pot">Montante estimado do bolão: <strong>${formatMoneyBR(amount)}</strong></div>
             <span>${started} jogador(es) iniciaram • ${totalGames} jogo(s) nesta rodada</span>
           </div>
         `;
@@ -2629,21 +2629,23 @@
       document.getElementById("playerOpenGamesBox").innerHTML = rounds.map(rodada => {
         const games = openGames.filter(g => getGameRound(g) === rodada);
         const progress = getRoundProgress(rodada);
-        const payStatus = getUserPaymentStatus(currentUser.id, rodada);
         const nextDeadline = games
           .map(g => new Date(getGameDeadline(g)))
           .filter(d => !isNaN(d))
-          .sort((a, b) => a - b)[0];
+          .sort((a,b) => a-b)[0];
 
         return `
-          <div class="list-card">
+          <div class="round-card">
             <div class="list-title">
               <strong>${rodada}</strong>
-              ${paymentStatusLabel(payStatus)}
+              <span class="pill open">Teste sem pagamento</span>
             </div>
+
+            ${renderRoundCounterBadge(rodada)}
             ${renderProgressBar(progress.filled, progress.total)}
+
             <p class="muted">Jogos: ${games.length}</p>
-            <p class="${nextDeadline && new Date() > nextDeadline ? "deadline-closed" : "deadline-ok"}">
+            <p class="deadline-ok">
               Próximo encerramento: ${nextDeadline ? nextDeadline.toLocaleString("pt-BR", {
                 timeZone: "America/Sao_Paulo",
                 day: "2-digit",
@@ -2676,7 +2678,6 @@
 
       box.innerHTML = rounds.map(rodada => {
         const games = openGames.filter(g => getGameRound(g) === rodada);
-        const paymentStatus = getUserPaymentStatus(currentUser.id, rodada);
         const filled = games.filter(game => db.palpites.some(p => p.usuario_id === currentUser.id && p.jogo_id === game.id)).length;
         const total = games.length;
         const allFilled = filled === total && total > 0;
@@ -2686,9 +2687,10 @@
           <div class="card" style="margin-bottom:14px;">
             <div class="list-title">
               <strong>${rodada}</strong>
-              ${PAYMENT_REQUIRED ? paymentStatusLabel(paymentStatus) : `<span class="pill open">Teste sem pagamento</span>`}
+              <span class="pill open">Teste sem pagamento</span>
             </div>
 
+            ${renderRoundCounterBadge(rodada)}
             ${renderProgressBar(filled, total)}
 
             <div class="games-grid">
