@@ -2686,7 +2686,7 @@
           <div class="card" style="margin-bottom:14px;">
             <div class="list-title">
               <strong>${rodada}</strong>
-              ${paymentStatusLabel(paymentStatus)}
+              ${PAYMENT_REQUIRED ? paymentStatusLabel(paymentStatus) : `<span class="pill open">Teste sem pagamento</span>`}
             </div>
 
             ${renderProgressBar(filled, total)}
@@ -2695,7 +2695,7 @@
               ${games.map(game => {
                 const guess = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === game.id);
                 const deadlineClosed = isGameDeadlineClosed(game);
-                const disabled = paymentStatus === "aprovado" || deadlineClosed;
+                const disabled = deadlineClosed;
 
                 return `
                   <div class="player-game">
@@ -2726,7 +2726,7 @@
             <div id="${reviewId}"></div>
 
             <div class="actions">
-              <button class="btn-primary" onclick="showRoundReview('${rodada}')" ${paymentStatus === "aprovado" ? "disabled" : ""}>
+              <button class="btn-primary" onclick="showRoundReview('${rodada}')">
                 ${allFilled ? "Confirmar rodada" : "Conferir rodada"}
               </button>
             </div>
@@ -2793,6 +2793,10 @@
       const aInput = document.getElementById("guessA_" + gameId);
       const bInput = document.getElementById("guessB_" + gameId);
 
+      if (!aInput || !bInput) {
+        return showMsg("Campos do palpite não encontrados. Atualize a página e tente novamente.", "error");
+      }
+
       if (aInput.value === "" || bInput.value === "") {
         return showMsg("Informe os dois palpites.", "error");
       }
@@ -2800,8 +2804,8 @@
       const palpite_a = Number(aInput.value);
       const palpite_b = Number(bInput.value);
 
-      if (Number.isNaN(palpite_a) || Number.isNaN(palpite_b) || palpite_a < 0 || palpite_b < 0) {
-        return showMsg("Informe palpites válidos.", "error");
+      if (!Number.isInteger(palpite_a) || !Number.isInteger(palpite_b) || palpite_a < 0 || palpite_b < 0) {
+        return showMsg("Informe palpites válidos, usando números inteiros iguais ou maiores que zero.", "error");
       }
 
       const existing = db.palpites.find(g => g.usuario_id === currentUser.id && g.jogo_id === gameId);
@@ -2810,24 +2814,33 @@
       if (existing) {
         result = await supabaseClient
           .from("palpites")
-          .update({ palpite_a, palpite_b, atualizado_em: new Date().toISOString() })
-          .eq("id", existing.id);
+          .update({
+            palpite_a,
+            palpite_b,
+            atualizado_em: new Date().toISOString()
+          })
+          .eq("id", existing.id)
+          .select();
       } else {
-        result = await supabaseClient.from("palpites").insert({
-          usuario_id: currentUser.id,
-          jogo_id: gameId,
-          palpite_a,
-          palpite_b
-        });
+        result = await supabaseClient
+          .from("palpites")
+          .insert({
+            usuario_id: currentUser.id,
+            jogo_id: gameId,
+            palpite_a,
+            palpite_b
+          })
+          .select();
       }
 
       if (result.error) {
-        return showMsg("Erro ao salvar palpite: " + result.error.message, "error");
+        console.error("Erro ao salvar palpite:", result.error);
+        return showMsg("Erro ao salvar palpite: " + (result.error.message || JSON.stringify(result.error)), "error");
       }
 
       await fetchAllData();
       render();
-      showMsg("Palpite salvo.");
+      showMsg("Palpite salvo com sucesso.");
     }
 
     async function finishRoundAndPay(rodada) {
